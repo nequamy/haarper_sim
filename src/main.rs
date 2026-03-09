@@ -10,6 +10,7 @@ mod track;
 use bevy_rapier3d::{plugin::RapierPhysicsPlugin, render::RapierDebugRenderPlugin};
 use camera::CameraPlugin;
 use debug_ui::DebugUIPlugin;
+use physics::PhysicsPlugin;
 use track::TrackPlugin;
 use vehicle::VehiclePlugin;
 
@@ -20,6 +21,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(CameraPlugin)
         .add_plugins(VehiclePlugin)
+        .add_plugins(PhysicsPlugin)
         .add_plugins(DebugUIPlugin)
         .add_plugins(TrackPlugin)
         .add_systems(Startup, setup)
