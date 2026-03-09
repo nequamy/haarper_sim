@@ -9,7 +9,7 @@ pub struct WheelF;
 
 #[derive(Resource)]
 pub struct WheelAngleSpeed {
-    angle: f32,
+    pub angle: f32,
 }
 
 impl Default for WheelAngleSpeed {
