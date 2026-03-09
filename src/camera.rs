@@ -1,16 +1,13 @@
 use bevy::anti_alias::taa::TemporalAntiAliasing;
 use bevy::core_pipeline::tonemapping::Tonemapping;
-use bevy::input::mouse::AccumulatedMouseMotion;
 use bevy::pbr::DistanceFog;
-use bevy::pbr::ScreenSpaceAmbientOcclusion;
-use bevy::post_process::bloom::Bloom;
 use bevy::post_process::dof::DepthOfField;
 use bevy::post_process::motion_blur::MotionBlur;
 use bevy::prelude::*;
 use bevy_panorbit_camera::PanOrbitCamera;
 use bevy_panorbit_camera::PanOrbitCameraPlugin;
 
-use crate::vehicle::VehicleState;
+use crate::physics::state::VehicleState;
 
 #[derive(Resource)]
 struct CameraMode {

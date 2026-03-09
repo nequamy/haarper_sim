@@ -5,7 +5,8 @@ use bevy::{
 use std::process;
 use sysinfo::{Pid, ProcessesToUpdate, System as SysInfoSystem};
 
-use crate::vehicle::{VehicleInput, VehicleState};
+use crate::physics::state::VehicleState;
+use crate::vehicle::input::VehicleInput;
 
 #[derive(Resource)]
 struct ProcessDiagnostics {
