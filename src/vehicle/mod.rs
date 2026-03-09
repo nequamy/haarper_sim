@@ -1,3 +1,7 @@
+mod input;
+mod spawn;
+mod wheel;
+
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{
     CharacterLength, Collider, CollisionGroups, Group, KinematicCharacterController,

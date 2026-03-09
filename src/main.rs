@@ -1,9 +1,11 @@
 use bevy::prelude::*;
 
+mod physics;
+mod vehicle;
+
 mod camera;
 mod debug_ui;
 mod track;
-mod vehicle;
 
 use bevy_rapier3d::{plugin::RapierPhysicsPlugin, render::RapierDebugRenderPlugin};
 use camera::CameraPlugin;
