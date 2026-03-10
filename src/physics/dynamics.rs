@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
+use crate::physics::pi_controller::PiController;
 use crate::physics::state::{Robot, VehicleParams, VehicleState};
 use crate::physics::tire_model::{Pacejka, TireParams};
 use crate::vehicle::input::VehicleInput;
@@ -11,15 +12,19 @@ pub fn update_physics(
     input: Res<VehicleInput>,
     params: Res<VehicleParams>,
     tire: Res<TireParams>,
+    mut controller: ResMut<PiController>,
     mut wheel_spd: ResMut<WheelAngleSpeed>,
     mut state: ResMut<VehicleState>,
 ) {
     let pacejka = Pacejka {
         params: tire.clone(),
     };
+
     let dt = time.delta_secs();
 
-    let fdr: f32 = input.throttle * params.f_max;
+    controller.target_velocity = input.throttle * 8.0;
+    let throttle = controller.update(state.vx, dt);
+    let fdr = throttle * params.f_max;
 
     wheel_spd.angle += (state.vx / params.r_wheel) * dt;
 
