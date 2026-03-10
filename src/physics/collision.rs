@@ -25,6 +25,10 @@ pub fn sync_vehicle_after_collision(
         let mut wx = state.vx * state.yaw.cos() - state.vy * state.yaw.sin();
         let mut wy = state.vx * state.yaw.sin() + state.vy * state.yaw.cos();
 
+        if coll.collisions.is_empty() {
+            return;
+        }
+
         let Some(details) = coll.collisions[0].hit.details else {
             return;
         };
@@ -46,7 +50,10 @@ pub fn sync_vehicle_after_collision(
         wx -= 1.15 * v_norm * nx;
         wy -= 1.15 * v_norm * nz;
 
+        let omega = (state.vx * state.vx + state.vy * state.vy).sqrt().max(0.1);
+
         state.vx = wx * state.yaw.cos() + wy * state.yaw.sin();
         state.vy = -wx * state.yaw.sin() + wy * state.yaw.cos();
+        state.omega *= 1.0 - 0.5 * (v_norm.abs() / omega)
     }
 }
