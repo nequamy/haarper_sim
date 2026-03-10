@@ -17,7 +17,6 @@ use vehicle::VehiclePlugin;
 fn main() {
     App::new()
         .add_plugins(RapierPhysicsPlugin::<()>::default())
-        .add_plugins(RapierDebugRenderPlugin::default())
         .add_plugins(DefaultPlugins)
         .add_plugins(CameraPlugin)
         .add_plugins(VehiclePlugin)
