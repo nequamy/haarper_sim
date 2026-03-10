@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 use crate::physics::state::{Robot, VehicleParams, VehicleState};
+use crate::physics::tire_model::{Pacejka, TireParams};
 use crate::vehicle::input::VehicleInput;
 use crate::vehicle::wheel::WheelAngleSpeed;
 
@@ -9,9 +10,13 @@ pub fn update_physics(
     time: Res<Time>,
     input: Res<VehicleInput>,
     params: Res<VehicleParams>,
+    tire: Res<TireParams>,
     mut wheel_spd: ResMut<WheelAngleSpeed>,
     mut state: ResMut<VehicleState>,
 ) {
+    let pacejka = Pacejka {
+        params: tire.clone(),
+    };
     let dt = time.delta_secs();
 
     let fdr: f32 = input.throttle * params.f_max;
@@ -28,36 +33,59 @@ pub fn update_physics(
     let vx_rr = state.vx + (params.w / 2.0) * state.omega;
     let vy_rr = state.vy - params.lr * state.omega;
 
-    // Slip angle
     let vx_fl_w = vx_fl * input.steering.cos() + vy_fl * input.steering.sin();
     let vy_fl_w = -vx_fl * input.steering.sin() + vy_fl * input.steering.cos();
     let vx_fr_w = vx_fr * input.steering.cos() + vy_fr * input.steering.sin();
     let vy_fr_w = -vx_fr * input.steering.sin() + vy_fr * input.steering.cos();
 
-    let alpha_fl = safe_slip_angle(vy_fl_w, vx_fl_w);
-    let alpha_fr = safe_slip_angle(vy_fr_w, vx_fr_w);
-    let alpha_rl = safe_slip_angle(vy_rl, vx_rl);
-    let alpha_rr = safe_slip_angle(vy_rr, vx_rr);
+    let delta_fz_long = params.m * state.ax * params.h_cg / params.wheelbase;
+    let delta_fz_lat = params.m * state.ay * params.h_cg / params.w;
 
     // Силы
-    let ff_ly: f32 = (params.tire_mu * (params.m * 9.81 * params.lr / (params.wheelbase * 2.0)))
-        * (params.tire_c * (params.tire_b * alpha_fl).atan()).sin();
-    let ff_ry: f32 = (params.tire_mu * (params.m * 9.81 * params.lr / (params.wheelbase * 2.0)))
-        * (params.tire_c * (params.tire_b * alpha_fr).atan()).sin();
-    let fr_ly: f32 = (params.tire_mu * (params.m * 9.81 * params.lf / (params.wheelbase * 2.0)))
-        * (params.tire_c * (params.tire_b * alpha_rl).atan()).sin();
-    let fr_ry: f32 = (params.tire_mu * (params.m * 9.81 * params.lf / (params.wheelbase * 2.0)))
-        * (params.tire_c * (params.tire_b * alpha_rr).atan()).sin();
+    let (fx_fl, fy_fl) = pacejka.compute(
+        safe_slip_angle(vy_fl_w, vx_fl_w),
+        0.0,
+        ((params.m * 9.81 * params.lr / (params.wheelbase * 2.0))
+            - delta_fz_long / 2.0
+            - delta_fz_lat / 2.0)
+            .max(0.0),
+    );
+    let (fx_fr, fy_fr) = pacejka.compute(
+        safe_slip_angle(vy_fr_w, vx_fr_w),
+        0.0,
+        ((params.m * 9.81 * params.lr / (params.wheelbase * 2.0)) - delta_fz_long / 2.0
+            + delta_fz_lat / 2.0)
+            .max(0.0),
+    );
+    let (fx_rl, fy_rl) = pacejka.compute(
+        safe_slip_angle(vy_rl, vx_rl),
+        0.0,
+        ((params.m * 9.81 * params.lf / (params.wheelbase * 2.0)) + delta_fz_long / 2.0
+            - delta_fz_lat / 2.0)
+            .max(0.0),
+    );
+    let (fx_rr, fy_rr) = pacejka.compute(
+        safe_slip_angle(vy_rr, vx_rr),
+        0.0,
+        ((params.m * 9.81 * params.lf / (params.wheelbase * 2.0))
+            + delta_fz_long / 2.0
+            + delta_fz_lat / 2.0)
+            .max(0.0),
+    );
 
-    let fx_fl_body = (fdr / 4.0) * input.steering.cos() - ff_ly * input.steering.sin();
-    let fy_fl_body = (fdr / 4.0) * input.steering.sin() + ff_ly * input.steering.cos();
-    let fx_fr_body = (fdr / 4.0) * input.steering.cos() - ff_ry * input.steering.sin();
-    let fy_fr_body = (fdr / 4.0) * input.steering.sin() + ff_ry * input.steering.cos();
+    let fx_fl_body = (fdr / 4.0 + fx_fl) * (input.steering * state.vx.signum()).cos()
+        - fy_fl * (input.steering * state.vx.signum()).sin();
+    let fy_fl_body = (fdr / 4.0 + fx_fl) * (input.steering * state.vx.signum()).sin()
+        + fy_fl * (input.steering * state.vx.signum()).cos();
+    let fx_fr_body = (fdr / 4.0 + fx_fr) * (input.steering * state.vx.signum()).cos()
+        - fy_fr * (input.steering * state.vx.signum()).sin();
+    let fy_fr_body = (fdr / 4.0 + fx_fr) * (input.steering * state.vx.signum()).sin()
+        + fy_fr * (input.steering * state.vx.signum()).cos();
 
-    let fx_rl_body = fdr / 4.0;
-    let fy_rl_body = fr_ly;
-    let fx_rr_body = fdr / 4.0;
-    let fy_rr_body = fr_ry;
+    let fx_rl_body = fdr / 4.0 + fx_rl;
+    let fy_rl_body = fy_rl;
+    let fx_rr_body = fdr / 4.0 + fx_rr;
+    let fy_rr_body = fy_rr;
 
     // Сопротивления
     let f_rolling = (0.015 * params.m * 9.81) * state.vx.signum();
@@ -75,6 +103,9 @@ pub fn update_physics(
 
     let vx_old = state.vx;
     let vy_old = state.vy;
+
+    state.ax = sum_fx / params.m;
+    state.ay = sum_fy / params.m;
 
     state.vx += ((1.0 / params.m) * (sum_fx + params.m * vy_old * state.omega)) * dt;
     state.vy += ((1.0 / params.m) * (sum_fy - params.m * vx_old * state.omega)) * dt;
