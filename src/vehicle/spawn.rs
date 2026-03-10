@@ -1,5 +1,5 @@
 use crate::physics::state::Robot;
-use crate::vehicle::wheel::{Wheel, WheelF};
+use crate::vehicle::wheel::{Wheel, WheelFL, WheelFR};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{
     CharacterLength, Collider, CollisionGroups, Group, KinematicCharacterController, RigidBody,
@@ -34,14 +34,14 @@ pub fn spawn_vehicle(mut commands: Commands, asset_server: Res<AssetServer>) {
                 SceneRoot(asset_server.load("wheel.glb#Scene0")),
                 Transform::from_translation(Vec3::new(0.18, -0.040, -0.125))
                     .with_rotation(wheel_rot),
-                WheelF,
+                WheelFR,
             ));
 
             parent.spawn((
                 SceneRoot(asset_server.load("wheel.glb#Scene0")),
                 Transform::from_translation(Vec3::new(0.18, -0.040, 0.125))
                     .with_rotation(wheel_rot),
-                WheelF,
+                WheelFL,
             ));
 
             parent.spawn((

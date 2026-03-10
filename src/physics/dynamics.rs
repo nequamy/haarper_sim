@@ -33,10 +33,17 @@ pub fn update_physics(
     let vx_rr = state.vx + (params.w / 2.0) * state.omega;
     let vy_rr = state.vy - params.lr * state.omega;
 
-    let vx_fl_w = vx_fl * input.steering.cos() + vy_fl * input.steering.sin();
-    let vy_fl_w = -vx_fl * input.steering.sin() + vy_fl * input.steering.cos();
-    let vx_fr_w = vx_fr * input.steering.cos() + vy_fr * input.steering.sin();
-    let vy_fr_w = -vx_fr * input.steering.sin() + vy_fr * input.steering.cos();
+    state.delta_fl = (params.wheelbase * input.steering.tan()
+        / (params.wheelbase - params.w / 2.0 * input.steering.tan()))
+    .atan();
+    state.delta_fr = (params.wheelbase * input.steering.tan()
+        / (params.wheelbase + params.w / 2.0 * input.steering.tan()))
+    .atan();
+
+    let vx_fl_w = vx_fl * state.delta_fl.cos() + vy_fl * state.delta_fl.sin();
+    let vy_fl_w = -vx_fl * state.delta_fl.sin() + vy_fl * state.delta_fl.cos();
+    let vx_fr_w = vx_fr * state.delta_fr.cos() + vy_fr * state.delta_fr.sin();
+    let vy_fr_w = -vx_fr * state.delta_fr.sin() + vy_fr * state.delta_fr.cos();
 
     let delta_fz_long = params.m * state.ax * params.h_cg / params.wheelbase;
     let delta_fz_lat = params.m * state.ay * params.h_cg / params.w;
@@ -73,14 +80,14 @@ pub fn update_physics(
             .max(0.0),
     );
 
-    let fx_fl_body = (fdr / 4.0 + fx_fl) * (input.steering * state.vx.signum()).cos()
-        - fy_fl * (input.steering * state.vx.signum()).sin();
-    let fy_fl_body = (fdr / 4.0 + fx_fl) * (input.steering * state.vx.signum()).sin()
-        + fy_fl * (input.steering * state.vx.signum()).cos();
-    let fx_fr_body = (fdr / 4.0 + fx_fr) * (input.steering * state.vx.signum()).cos()
-        - fy_fr * (input.steering * state.vx.signum()).sin();
-    let fy_fr_body = (fdr / 4.0 + fx_fr) * (input.steering * state.vx.signum()).sin()
-        + fy_fr * (input.steering * state.vx.signum()).cos();
+    let fx_fl_body = (fdr / 4.0 + fx_fl) * (state.delta_fl * state.vx.signum()).cos()
+        - fy_fl * (state.delta_fl * state.vx.signum()).sin();
+    let fy_fl_body = (fdr / 4.0 + fx_fl) * (state.delta_fl * state.vx.signum()).sin()
+        + fy_fl * (state.delta_fl * state.vx.signum()).cos();
+    let fx_fr_body = (fdr / 4.0 + fx_fr) * (state.delta_fr * state.vx.signum()).cos()
+        - fy_fr * (state.delta_fr * state.vx.signum()).sin();
+    let fy_fr_body = (fdr / 4.0 + fx_fr) * (state.delta_fr * state.vx.signum()).sin()
+        + fy_fr * (state.delta_fr * state.vx.signum()).cos();
 
     let fx_rl_body = fdr / 4.0 + fx_rl;
     let fy_rl_body = fy_rl;
@@ -88,11 +95,11 @@ pub fn update_physics(
     let fy_rr_body = fy_rr;
 
     // Сопротивления
-    let f_rolling = (0.015 * params.m * 9.81) * state.vx.signum();
-    let f_aero = 0.5 * 1.225 * 0.4 * 0.02 * state.vx * state.vx.abs();
-    let f_drivetrain = 1.0 * state.vx;
-    let omega_damp = 0.04 * state.omega;
-    let vy_damp = 1.0 * state.vy;
+    let f_rolling = (params.c_rolling * params.m * 9.81) * state.vx.signum();
+    let f_aero = 0.5 * params.rho_air * params.cd_a * state.vx * state.vx.abs();
+    let f_drivetrain = params.c_drivetrain * state.vx;
+    let omega_damp = params.c_omega_damp * state.omega;
+    let vy_damp = params.c_vy_damp * state.vy;
     let total_resist = f_rolling + f_aero + f_drivetrain;
 
     let sum_fx = fx_fl_body + fx_fr_body + fx_rl_body + fx_rr_body - total_resist;

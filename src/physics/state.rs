@@ -10,6 +10,8 @@ pub struct VehicleState {
     pub omega: f32,
     pub ax: f32,
     pub ay: f32,
+    pub delta_fl: f32,
+    pub delta_fr: f32,
 }
 
 #[derive(Resource)]
@@ -23,6 +25,12 @@ pub struct VehicleParams {
     pub r_wheel: f32,
     pub f_max: f32,
     pub h_cg: f32,
+    pub c_rolling: f32,
+    pub cd_a: f32,
+    pub c_drivetrain: f32,
+    pub c_omega_damp: f32,
+    pub c_vy_damp: f32,
+    pub rho_air: f32,
 }
 
 impl Default for VehicleParams {
@@ -37,6 +45,12 @@ impl Default for VehicleParams {
             r_wheel: 0.055,
             f_max: 11.5,
             h_cg: 0.04,
+            c_rolling: 0.015,
+            cd_a: 0.02,
+            c_drivetrain: 1.0,
+            c_omega_damp: 0.04,
+            c_vy_damp: 1.0,
+            rho_air: 1.225,
         }
     }
 }

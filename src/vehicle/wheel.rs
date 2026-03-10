@@ -1,11 +1,14 @@
-use crate::vehicle::input::VehicleInput;
+use crate::physics::state::VehicleState;
 use bevy::prelude::*;
 
 #[derive(Component)]
 pub struct Wheel;
 
 #[derive(Component)]
-pub struct WheelF;
+pub struct WheelFR;
+
+#[derive(Component)]
+pub struct WheelFL;
 
 #[derive(Resource)]
 pub struct WheelAngleSpeed {
@@ -18,17 +21,27 @@ impl Default for WheelAngleSpeed {
     }
 }
 
-pub fn update_forward_wheel_angle(
-    input: Res<VehicleInput>,
+pub fn update_forward_left_wheel_angle(
+    state: Res<VehicleState>,
     wheel_spd: Res<WheelAngleSpeed>,
-    mut query: Query<&mut Transform, With<WheelF>>,
+    mut query: Query<&mut Transform, With<WheelFL>>,
 ) {
     let _ = query.iter_mut().for_each(|mut w| {
-        w.rotation = Quat::from_rotation_y(-input.steering + std::f32::consts::FRAC_PI_2)
+        w.rotation = Quat::from_rotation_y(-state.delta_fl + std::f32::consts::FRAC_PI_2)
             * Quat::from_rotation_x(wheel_spd.angle)
     });
 }
 
+pub fn update_forward_right_wheel_angle(
+    state: Res<VehicleState>,
+    wheel_spd: Res<WheelAngleSpeed>,
+    mut query: Query<&mut Transform, With<WheelFR>>,
+) {
+    let _ = query.iter_mut().for_each(|mut w| {
+        w.rotation = Quat::from_rotation_y(-state.delta_fr + std::f32::consts::FRAC_PI_2)
+            * Quat::from_rotation_x(wheel_spd.angle)
+    });
+}
 pub fn update_wheel_angle(
     wheel_spd: Res<WheelAngleSpeed>,
     mut query: Query<&mut Transform, With<Wheel>>,
