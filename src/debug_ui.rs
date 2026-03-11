@@ -5,11 +5,7 @@ use bevy::{
 use std::process;
 use sysinfo::{Pid, ProcessesToUpdate, System as SysInfoSystem};
 
-use crate::physics::{
-    battery::{self, BatteryState},
-    motor::MotorState,
-    state::VehicleState,
-};
+use crate::physics::{battery::BatteryState, motor::MotorState, state::VehicleState};
 use crate::vehicle::input::VehicleInput;
 
 #[derive(Resource)]
@@ -143,6 +139,7 @@ fn update_debug_ui_sim(
             steering: {:.1}\n\
             throttle: {:.2}\n\
             \n\
+            rpm: {:.2}\n\
             current: {:.2}\n\
             voltage: {:.2}",
         state.x,
@@ -153,6 +150,7 @@ fn update_debug_ui_sim(
         state.omega,
         input.steering.to_degrees(),
         input.throttle,
+        motor.rpm,
         motor.current,
         battery.v_terminal
     ))

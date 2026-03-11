@@ -1,13 +1,14 @@
+use bevy::math::FloatPow;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::physics::battery::{self, BatteryParams, BatteryState};
+use crate::physics::battery::{BatteryParams, BatteryState};
 use crate::physics::motor::{MotorParams, MotorState};
 use crate::physics::pi_controller::PiController;
 use crate::physics::state::{Robot, VehicleParams, VehicleState};
 use crate::physics::tire_model::{Pacejka, TireParams};
 use crate::vehicle::input::VehicleInput;
-use crate::vehicle::wheel::WheelAngleSpeed;
+use crate::vehicle::wheel::{WheelAngleSpeed, WheelDynamics};
 
 pub fn update_physics(
     time: Res<Time>,
@@ -20,6 +21,7 @@ pub fn update_physics(
     mut motor: ResMut<MotorState>,
     mut controller: ResMut<PiController>,
     mut wheel_spd: ResMut<WheelAngleSpeed>,
+    mut wheel_dynamics: ResMut<WheelDynamics>,
     mut state: ResMut<VehicleState>,
 ) {
     let pacejka = Pacejka {
@@ -30,7 +32,7 @@ pub fn update_physics(
 
     controller.target_velocity = input.throttle;
     let duty = controller.update(state.vx, dt);
-    let fdr = motor.compute(
+    let t_motor = motor.compute(
         duty,
         state.vx,
         params.r_wheel,
@@ -39,7 +41,10 @@ pub fn update_physics(
     );
     battery.update(motor.current, dt, &battery_params);
 
+    let t_per_wheel = t_motor * motor_params.gear_ratio * motor_params.eta / 4.0;
+
     wheel_spd.angle += (state.vx / params.r_wheel) * dt;
+    wheel_spd.angle = wheel_spd.angle.rem_euclid(std::f32::consts::TAU);
 
     // Скорости
     let vx_fl = state.vx - (params.w / 2.0) * state.omega;
@@ -69,7 +74,11 @@ pub fn update_physics(
     // Силы
     let (fx_fl, fy_fl) = pacejka.compute(
         safe_slip_angle(vy_fl_w, vx_fl_w),
-        0.0,
+        (wheel_dynamics.omega_fl * params.r_wheel - vx_fl_w)
+            / (wheel_dynamics.omega_fl * params.r_wheel)
+                .abs()
+                .max(vx_fl_w.abs())
+                .max(0.01),
         ((params.m * 9.81 * params.lr / (params.wheelbase * 2.0))
             - delta_fz_long / 2.0
             - delta_fz_lat / 2.0)
@@ -77,48 +86,80 @@ pub fn update_physics(
     );
     let (fx_fr, fy_fr) = pacejka.compute(
         safe_slip_angle(vy_fr_w, vx_fr_w),
-        0.0,
+        (wheel_dynamics.omega_fr * params.r_wheel - vx_fr_w)
+            / (wheel_dynamics.omega_fr * params.r_wheel)
+                .abs()
+                .max(vx_fr_w.abs())
+                .max(0.01),
         ((params.m * 9.81 * params.lr / (params.wheelbase * 2.0)) - delta_fz_long / 2.0
             + delta_fz_lat / 2.0)
             .max(0.0),
     );
     let (fx_rl, fy_rl) = pacejka.compute(
         safe_slip_angle(vy_rl, vx_rl),
-        0.0,
+        (wheel_dynamics.omega_rl * params.r_wheel - vx_rl)
+            / (wheel_dynamics.omega_rl * params.r_wheel)
+                .abs()
+                .max(vx_rl.abs())
+                .max(0.01),
         ((params.m * 9.81 * params.lf / (params.wheelbase * 2.0)) + delta_fz_long / 2.0
             - delta_fz_lat / 2.0)
             .max(0.0),
     );
     let (fx_rr, fy_rr) = pacejka.compute(
         safe_slip_angle(vy_rr, vx_rr),
-        0.0,
+        (wheel_dynamics.omega_rr * params.r_wheel - vx_rr)
+            / (wheel_dynamics.omega_rr * params.r_wheel)
+                .abs()
+                .max(vx_rr.abs())
+                .max(0.01),
         ((params.m * 9.81 * params.lf / (params.wheelbase * 2.0))
             + delta_fz_long / 2.0
             + delta_fz_lat / 2.0)
             .max(0.0),
     );
 
-    let fx_fl_body = (fdr / 4.0 + fx_fl) * (state.delta_fl * state.vx.signum()).cos()
-        - fy_fl * (state.delta_fl * state.vx.signum()).sin();
-    let fy_fl_body = (fdr / 4.0 + fx_fl) * (state.delta_fl * state.vx.signum()).sin()
-        + fy_fl * (state.delta_fl * state.vx.signum()).cos();
-    let fx_fr_body = (fdr / 4.0 + fx_fr) * (state.delta_fr * state.vx.signum()).cos()
-        - fy_fr * (state.delta_fr * state.vx.signum()).sin();
-    let fy_fr_body = (fdr / 4.0 + fx_fr) * (state.delta_fr * state.vx.signum()).sin()
-        + fy_fr * (state.delta_fr * state.vx.signum()).cos();
+    wheel_dynamics.omega_fl += (t_per_wheel
+        - fx_fl * params.r_wheel
+        - (wheel_dynamics.omega_fl * 0.00005)
+        - (0.0000014 * motor_params.gear_ratio.squared() * wheel_dynamics.omega_fl))
+        / wheel_dynamics.j_eff
+        * dt;
+    wheel_dynamics.omega_fr += (t_per_wheel
+        - fx_fr * params.r_wheel
+        - (wheel_dynamics.omega_fr * 0.00005)
+        - (0.0000014 * motor_params.gear_ratio.squared() * wheel_dynamics.omega_fr))
+        / wheel_dynamics.j_eff
+        * dt;
+    wheel_dynamics.omega_rl += (t_per_wheel
+        - fx_rl * params.r_wheel
+        - (wheel_dynamics.omega_rl * 0.00005)
+        - (0.0000014 * motor_params.gear_ratio.squared() * wheel_dynamics.omega_rl))
+        / wheel_dynamics.j_eff
+        * dt;
+    wheel_dynamics.omega_rr += (t_per_wheel
+        - fx_rr * params.r_wheel
+        - (wheel_dynamics.omega_rr * 0.00005)
+        - (0.0000014 * motor_params.gear_ratio.squared() * wheel_dynamics.omega_rr))
+        / wheel_dynamics.j_eff
+        * dt;
 
-    let fx_rl_body = fdr / 4.0 + fx_rl;
+    let fx_fl_body = fx_fl * state.delta_fl.cos() - fy_fl * state.delta_fl.sin();
+    let fy_fl_body = fx_fl * state.delta_fl.sin() + fy_fl * state.delta_fl.cos();
+    let fx_fr_body = fx_fr * state.delta_fr.cos() - fy_fr * state.delta_fr.sin();
+    let fy_fr_body = fx_fr * state.delta_fr.sin() + fy_fr * state.delta_fr.cos();
+
+    let fx_rl_body = fx_rl;
     let fy_rl_body = fy_rl;
-    let fx_rr_body = fdr / 4.0 + fx_rr;
+    let fx_rr_body = fx_rr;
     let fy_rr_body = fy_rr;
 
     // Сопротивления
-    let f_rolling = (params.c_rolling * params.m * 9.81) * state.vx.signum();
+    let f_rolling = (params.c_rolling * params.m * 9.81) * (state.vx / 0.05).tanh();
     let f_aero = 0.5 * params.rho_air * params.cd_a * state.vx * state.vx.abs();
-    let f_drivetrain = params.c_drivetrain * state.vx;
     let omega_damp = params.c_omega_damp * state.omega;
     let vy_damp = params.c_vy_damp * state.vy;
-    let total_resist = f_rolling + f_aero + f_drivetrain;
+    let total_resist = f_rolling + f_aero;
 
     let sum_fx = fx_fl_body + fx_fr_body + fx_rl_body + fx_rr_body - total_resist;
     let sum_fy = fy_fl_body + fy_fr_body + fy_rl_body + fy_rr_body - vy_damp;

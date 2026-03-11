@@ -10,7 +10,7 @@ pub fn spawn_vehicle(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn((
             SceneRoot(asset_server.load("chassis.glb#Scene0")),
             Transform::from_xyz(10.0, 0.095, 10.0),
-            Collider::cuboid(0.38 / 2.0, 0.25 / 2.0, 0.25 / 2.0),
+            Collider::cuboid(0.55 / 2.0, 0.10 / 2.0, 0.21 / 2.0),
             RigidBody::KinematicPositionBased,
             KinematicCharacterController {
                 snap_to_ground: None,

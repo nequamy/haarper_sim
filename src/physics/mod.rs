@@ -30,10 +30,11 @@ impl Plugin for PhysicsPlugin {
             .insert_resource(MotorState::default())
             .insert_resource(BatteryParams::default())
             .insert_resource(BatteryState::new())
+            .insert_resource(Time::<Fixed>::from_hz(500.0))
             .insert_resource(PiController {
-                kp: 0.0002,
-                ki: 0.005,
-                saturation: 0.0698,
+                kp: 0.23,
+                ki: 0.075,
+                saturation: 1.0,
                 ..default()
             })
             .add_systems(

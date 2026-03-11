@@ -113,15 +113,6 @@ fn spawn_track(
     }
 }
 
-fn oval(cx: f32, cy: f32, rx: f32, ry: f32, n: usize) -> Vec<Vec2> {
-    (0..n)
-        .map(|i| {
-            let t = (i as f32 / n as f32) * std::f32::consts::TAU;
-            Vec2::new(cx + rx * t.cos(), cy + ry * t.sin())
-        })
-        .collect()
-}
-
 fn load_centerline(path: &str) -> Vec<(Vec2, f32, f32)> {
     let content = std::fs::read_to_string(path).expect("Failed to read track CSV");
     let mut data: Vec<(Vec2, f32, f32)> = content

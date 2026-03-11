@@ -14,10 +14,16 @@ impl PiController {
         let error = self.target_velocity - current_velocity;
 
         self.integral += error * dt;
-        self.integral = self
-            .integral
-            .clamp(-self.saturation / self.ki, self.saturation / self.ki);
+        self.integral = self.integral.clamp(
+            -self.saturation / self.ki,
+            self.saturation / self.ki.max(f32::EPSILON),
+        );
 
-        (self.kp * error + self.ki * self.integral).clamp(-self.saturation, self.saturation)
+        let mut output = self.kp * error + self.ki * self.integral;
+
+        output = output.clamp(-self.saturation, self.saturation);
+        // output = output.clamp(0.0, self.saturation);
+
+        output
     }
 }

@@ -54,6 +54,6 @@ pub fn sync_vehicle_after_collision(
 
         state.vx = wx * state.yaw.cos() + wy * state.yaw.sin();
         state.vy = -wx * state.yaw.sin() + wy * state.yaw.cos();
-        state.omega *= 1.0 - 0.5 * (v_norm.abs() / omega)
+        // state.omega *= (1.0 - 0.5 * (v_norm.abs() / omega)).clamp(0.0, 1.0);
     }
 }

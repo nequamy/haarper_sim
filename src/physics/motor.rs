@@ -2,19 +2,17 @@ use bevy::prelude::*;
 
 #[derive(Resource)]
 pub struct MotorParams {
-    kv: f32,
-    ke: f32,
-    kt: f32,
-    r: f32,
-    i_max: f32,
-    gear_ratio: f32,
-    eta: f32,
+    pub ke: f32,
+    pub kt: f32,
+    pub r: f32,
+    pub i_max: f32,
+    pub gear_ratio: f32,
+    pub eta: f32,
 }
 
 impl Default for MotorParams {
     fn default() -> Self {
         Self {
-            kv: 3500.0,
             ke: 0.001552,
             kt: 0.00233,
             r: 0.0059,
@@ -47,11 +45,19 @@ impl MotorState {
         self.voltage = self.duty * voltage;
         let v_bemf = params.ke * (velocity / radius) * params.gear_ratio;
 
-        self.current = ((self.voltage - v_bemf) / params.r).clamp(-params.i_max, params.i_max);
+        if duty != 0.0 {
+            self.current = ((self.voltage - v_bemf) / params.r).clamp(-params.i_max, params.i_max);
+        } else {
+            self.current = 0.0;
+        }
 
-        let t_motor = params.kt * self.current;
+        if duty.signum() != self.current.signum() {
+            self.current = 0.0;
+        }
 
-        t_motor * params.gear_ratio * params.eta / radius
+        self.rpm = (velocity / radius) * params.gear_ratio * 60.0 / (2.0 * std::f32::consts::PI);
+
+        params.kt * self.current
     }
 }
 

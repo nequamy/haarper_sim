@@ -43,6 +43,7 @@ impl BatteryState {
     pub fn new() -> Self {
         Self {
             soc: 1.0,
+            v_terminal: 12.6,
             ..default()
         }
     }
@@ -57,7 +58,8 @@ impl BatteryState {
 
         self.r_internal = params.r * (1.0 + params.k_r * (1.0 - self.soc).squared());
 
-        self.v_terminal = params.n_cells as f32 * v_oc - self.i_draw * self.r_internal;
+        self.v_terminal =
+            params.n_cells as f32 * v_oc - self.i_draw * self.r_internal * params.n_cells as f32;
 
         self.soc -= current / (params.capacity_ah * 3600.0) * dt;
         self.soc = self.soc.clamp(0.05, 1.0);
