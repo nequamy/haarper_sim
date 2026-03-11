@@ -40,14 +40,14 @@ pub struct BatteryState {
 }
 
 impl BatteryState {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             soc: 1.0,
             ..default()
         }
     }
 
-    fn update(&mut self, current: f32, dt: f32, params: &BatteryParams) {
+    pub fn update(&mut self, current: f32, dt: f32, params: &BatteryParams) {
         self.i_draw = current;
 
         // Полином Шеферда
