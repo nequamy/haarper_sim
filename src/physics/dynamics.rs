@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
+use crate::physics::battery::{self, BatteryParams, BatteryState};
+use crate::physics::motor::{MotorParams, MotorState};
 use crate::physics::pi_controller::PiController;
 use crate::physics::state::{Robot, VehicleParams, VehicleState};
 use crate::physics::tire_model::{Pacejka, TireParams};
@@ -12,6 +14,10 @@ pub fn update_physics(
     input: Res<VehicleInput>,
     params: Res<VehicleParams>,
     tire: Res<TireParams>,
+    battery_params: Res<BatteryParams>,
+    motor_params: Res<MotorParams>,
+    mut battery: ResMut<BatteryState>,
+    mut motor: ResMut<MotorState>,
     mut controller: ResMut<PiController>,
     mut wheel_spd: ResMut<WheelAngleSpeed>,
     mut state: ResMut<VehicleState>,
@@ -22,9 +28,16 @@ pub fn update_physics(
 
     let dt = time.delta_secs();
 
-    controller.target_velocity = input.throttle * 8.0;
-    let throttle = controller.update(state.vx, dt);
-    let fdr = throttle * params.f_max;
+    controller.target_velocity = input.throttle;
+    let duty = controller.update(state.vx, dt);
+    let fdr = motor.compute(
+        duty,
+        state.vx,
+        params.r_wheel,
+        battery.v_terminal,
+        &motor_params,
+    );
+    battery.update(motor.current, dt, &battery_params);
 
     wheel_spd.angle += (state.vx / params.r_wheel) * dt;
 
