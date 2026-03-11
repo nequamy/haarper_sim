@@ -14,6 +14,9 @@ impl PiController {
         let error = self.target_velocity - current_velocity;
 
         self.integral += error * dt;
+        self.integral = self
+            .integral
+            .clamp(-self.saturation / self.ki, self.saturation / self.ki);
 
         (self.kp * error + self.ki * self.integral).clamp(-self.saturation, self.saturation)
     }
