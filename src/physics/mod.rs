@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+pub mod battery;
 pub mod collision;
 pub mod dynamics;
 pub mod pi_controller;
