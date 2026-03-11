@@ -13,7 +13,11 @@ use dynamics::{sync_vehicle_transform, update_physics};
 use state::{VehicleParams, VehicleState};
 use tire_model::TireParams;
 
-use crate::physics::pi_controller::PiController;
+use crate::physics::{
+    battery::{BatteryParams, BatteryState},
+    motor::{MotorParams, MotorState},
+    pi_controller::PiController,
+};
 
 pub struct PhysicsPlugin;
 
@@ -22,6 +26,10 @@ impl Plugin for PhysicsPlugin {
         app.insert_resource(VehicleState::default())
             .insert_resource(VehicleParams::default())
             .insert_resource(TireParams::default())
+            .insert_resource(MotorParams::default())
+            .insert_resource(MotorState::default())
+            .insert_resource(BatteryParams::default())
+            .insert_resource(BatteryState::new())
             .insert_resource(PiController {
                 kp: 0.0002,
                 ki: 0.005,
