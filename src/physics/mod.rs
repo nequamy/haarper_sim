@@ -3,6 +3,7 @@ use bevy::prelude::*;
 pub mod battery;
 pub mod collision;
 pub mod dynamics;
+pub mod motor;
 pub mod pi_controller;
 pub mod state;
 pub mod tire_model;
