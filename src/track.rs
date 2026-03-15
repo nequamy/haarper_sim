@@ -1,20 +1,30 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{Collider, RigidBody};
 
+use crate::vehicle::spawn::spawn_vehicle;
+
+#[derive(Resource, Default)]
+pub struct TrackData {
+    pub data: Vec<(Vec2, f32, f32)>,
+}
+
 pub struct TrackPlugin;
 
 impl Plugin for TrackPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_track);
+        app.insert_resource(TrackData::default())
+            .add_systems(Startup, spawn_track.before(spawn_vehicle));
     }
 }
 
 fn spawn_track(
     mut commands: Commands,
+    mut track_data: ResMut<TrackData>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let track_data = load_centerline("assets/tracks/sochi/Sochi_centerline.csv");
+    track_data.data = load_centerline("assets/tracks/sochi/Sochi_centerline.csv");
+
     let wall_height = 0.3;
     let wall_thickness = 0.02;
 
@@ -22,22 +32,22 @@ fn spawn_track(
     let road_mat = materials.add(Color::srgb(0.15, 0.15, 0.15));
     let dash_mat = materials.add(Color::srgb(0.9, 0.9, 0.9));
 
-    let n = track_data.len();
+    let n = track_data.data.len();
 
     let mut left_points = Vec::with_capacity(n);
     let mut right_points = Vec::with_capacity(n);
 
     for i in 0..n {
-        let prev = track_data[(i + n - 1) % n].0;
-        let curr = track_data[i].0;
-        let next = track_data[(i + 1) % n].0;
+        let prev = track_data.data[(i + n - 1) % n].0;
+        let curr = track_data.data[i].0;
+        let next = track_data.data[(i + 1) % n].0;
 
         let dir1 = (curr - prev).normalize();
         let dir2 = (next - curr).normalize();
         let avg_dir = (dir1 + dir2).normalize();
         let normal = Vec2::new(-avg_dir.y, avg_dir.x);
 
-        let (_, w_right, w_left) = track_data[i];
+        let (_, w_right, w_left) = track_data.data[i];
         left_points.push(curr + normal * w_left);
         right_points.push(curr - normal * w_right);
     }
@@ -96,8 +106,8 @@ fn spawn_track(
         ));
 
         if i % 2 == 0 {
-            let pos = track_data[i].0;
-            let pos_next = track_data[next].0;
+            let pos = track_data.data[i].0;
+            let pos_next = track_data.data[next].0;
             let center = (pos + pos_next) / 2.0;
             let dir = (pos_next - pos).normalize();
             let length = (pos_next - pos).length() + wall_thickness;

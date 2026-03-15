@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct VehicleState {
     pub x: f32,
     pub y: f32,
@@ -12,23 +12,6 @@ pub struct VehicleState {
     pub ay: f32,
     pub delta_fl: f32,
     pub delta_fr: f32,
-}
-
-impl Default for VehicleState {
-    fn default() -> Self {
-        Self {
-            x: 10.0,
-            y: 10.0,
-            yaw: 0.0,
-            vx: 0.0,
-            vy: 0.0,
-            omega: 0.0,
-            ax: 0.0,
-            ay: 0.0,
-            delta_fl: 0.0,
-            delta_fr: 0.0,
-        }
-    }
 }
 
 #[derive(Resource)]

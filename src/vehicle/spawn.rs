@@ -1,15 +1,29 @@
-use crate::physics::state::Robot;
+use crate::physics::state::{Robot, VehicleState};
+use crate::track::TrackData;
 use crate::vehicle::wheel::{Wheel, WheelFL, WheelFR};
+use bevy::math::ops::atan2;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{
     CharacterLength, Collider, CollisionGroups, Group, KinematicCharacterController, RigidBody,
 };
 
-pub fn spawn_vehicle(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn spawn_vehicle(
+    track: Res<TrackData>,
+    asset_server: Res<AssetServer>,
+    mut commands: Commands,
+    mut state: ResMut<VehicleState>,
+) {
+    let (x, y, z) = get_start_position(&track);
+    let yaw = get_start_heading(&track);
+
+    state.x = x;
+    state.y = z;
+    state.yaw = yaw;
+
     commands
         .spawn((
             SceneRoot(asset_server.load("chassis.glb#Scene0")),
-            Transform::from_xyz(10.0, 0.095, 10.0),
+            Transform::from_xyz(x, y, z).with_rotation(Quat::from_rotation_y(-yaw)),
             Collider::cuboid(0.55 / 2.0, 0.10 / 2.0, 0.21 / 2.0),
             RigidBody::KinematicPositionBased,
             KinematicCharacterController {
@@ -56,4 +70,19 @@ pub fn spawn_vehicle(mut commands: Commands, asset_server: Res<AssetServer>) {
                 Transform::from_translation(Vec3::new(-0.05, 0.145, 0.0)),
             ));
         });
+}
+
+fn get_start_position(track: &TrackData) -> (f32, f32, f32) {
+    (track.data[0].0.x, 0.095, track.data[0].0.y)
+}
+
+fn get_start_heading(track: &TrackData) -> f32 {
+    if track.data.len() < 10 {
+        return std::f32::consts::TAU;
+    }
+
+    atan2(
+        track.data[10].0.y - track.data[0].0.y,
+        track.data[10].0.x - track.data[0].0.x,
+    )
 }

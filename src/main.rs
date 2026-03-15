@@ -22,7 +22,7 @@ fn main() {
         .add_plugins(VehiclePlugin)
         .add_plugins(PhysicsPlugin)
         .add_plugins(DebugUIPlugin)
-        // .add_plugins(TrackPlugin)
+        .add_plugins(TrackPlugin)
         .add_systems(Startup, setup)
         .run();
 }
