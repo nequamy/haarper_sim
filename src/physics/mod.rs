@@ -4,7 +4,6 @@ pub mod battery;
 pub mod collision;
 pub mod dynamics;
 pub mod motor;
-pub mod pi_controller;
 pub mod state;
 pub mod tire_model;
 
@@ -16,7 +15,6 @@ use tire_model::TireParams;
 use crate::physics::{
     battery::{BatteryParams, BatteryState},
     motor::{MotorParams, MotorState},
-    pi_controller::PiController,
 };
 
 pub struct PhysicsPlugin;
@@ -31,12 +29,6 @@ impl Plugin for PhysicsPlugin {
             .insert_resource(BatteryParams::default())
             .insert_resource(BatteryState::new())
             .insert_resource(Time::<Fixed>::from_hz(500.0))
-            .insert_resource(PiController {
-                kp: 0.23,
-                ki: 0.075,
-                saturation: 1.0,
-                ..default()
-            })
             .add_systems(
                 FixedUpdate,
                 (update_physics, sync_vehicle_transform).chain(),

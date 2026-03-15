@@ -4,7 +4,6 @@ use bevy_rapier3d::prelude::*;
 
 use crate::physics::battery::{BatteryParams, BatteryState};
 use crate::physics::motor::{MotorParams, MotorState};
-use crate::physics::pi_controller::PiController;
 use crate::physics::state::{Robot, VehicleParams, VehicleState};
 use crate::physics::tire_model::{Pacejka, TireParams};
 use crate::vehicle::input::VehicleInput;
@@ -19,7 +18,6 @@ pub fn update_physics(
     motor_params: Res<MotorParams>,
     mut battery: ResMut<BatteryState>,
     mut motor: ResMut<MotorState>,
-    mut controller: ResMut<PiController>,
     mut wheel_spd: ResMut<WheelAngleSpeed>,
     mut wheel_dynamics: ResMut<WheelDynamics>,
     mut state: ResMut<VehicleState>,
@@ -30,8 +28,7 @@ pub fn update_physics(
 
     let dt = time.delta_secs();
 
-    controller.target_velocity = input.throttle;
-    let duty = controller.update(state.vx, dt);
+    let duty = input.throttle;
     let t_motor = motor.compute(
         duty,
         state.vx,

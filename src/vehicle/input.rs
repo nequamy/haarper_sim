@@ -29,9 +29,9 @@ pub fn read_input(
     let steering_rate = 2.0;
 
     let target_throttle = if keys.pressed(KeyCode::KeyW) {
-        8.0
+        1.0
     } else if keys.pressed(KeyCode::KeyS) {
-        -8.0
+        -1.0
     } else {
         0.0
     };
