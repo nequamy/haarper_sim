@@ -36,7 +36,7 @@ pub fn update_physics(
         battery.v_terminal,
         &motor_params,
     );
-    battery.update(motor.current, dt, &battery_params);
+    battery.update(motor.current.abs(), dt, &battery_params);
 
     let t_per_wheel = t_motor * motor_params.gear_ratio * motor_params.eta / 4.0;
 
