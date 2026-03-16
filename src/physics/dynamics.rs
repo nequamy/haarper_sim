@@ -203,6 +203,6 @@ fn safe_slip_angle(vy: f32, vx: f32) -> f32 {
     if vx.abs() < 0.5 {
         -(vy * 2.0).clamp(-1.0, 1.0)
     } else {
-        -(vy / vx).atan()
+        -(vy).atan2(vx.abs())
     }
 }
