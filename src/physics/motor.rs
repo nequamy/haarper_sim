@@ -13,8 +13,8 @@ pub struct MotorParams {
 impl Default for MotorParams {
     fn default() -> Self {
         Self {
-            ke: 0.001552,
-            kt: 0.00233,
+            ke: 0.00273,
+            kt: 0.00273,
             r: 0.0059,
             i_max: 30.0,
             gear_ratio: 10.64,
@@ -35,15 +35,14 @@ impl MotorState {
     pub fn compute(
         &mut self,
         duty: f32,
-        velocity: f32,
-        radius: f32,
+        omega_avg: f32,
         voltage: f32,
         params: &MotorParams,
     ) -> f32 {
         self.duty = duty.clamp(-1.0, 1.0);
 
         self.voltage = self.duty * voltage;
-        let v_bemf = params.ke * (velocity / radius) * params.gear_ratio;
+        let v_bemf = params.ke * omega_avg * params.gear_ratio;
 
         if duty != 0.0 {
             self.current = ((self.voltage - v_bemf) / params.r).clamp(-params.i_max, params.i_max);
@@ -55,7 +54,7 @@ impl MotorState {
             self.current = 0.0;
         }
 
-        self.rpm = (velocity / radius) * params.gear_ratio * 60.0 / (2.0 * std::f32::consts::PI);
+        self.rpm = omega_avg * params.gear_ratio * 60.0 / (2.0 * std::f32::consts::PI);
 
         params.kt * self.current
     }
@@ -69,7 +68,7 @@ mod tests {
     fn test_motor_compute_on_zero_duty() {
         let mut motor = MotorState::default();
 
-        let t = motor.compute(0.0, 0.0, 0.055, 12.6, &MotorParams::default());
+        let t = motor.compute(0.0, 0.0, 12.6, &MotorParams::default());
 
         assert_eq!(t, 0.0);
         assert_eq!(motor.voltage, 0.0);
@@ -82,9 +81,9 @@ mod tests {
         let mut motor = MotorState::default();
         let params = MotorParams::default();
 
-        let t = motor.compute(1.0, 0.0, 0.055, 12.6, &params);
+        let t = motor.compute(1.0, 0.0, 12.6, &params);
 
-        assert!(t <= 11.5);
+        assert!((t - 0.0819).abs() <= 0.001);
         assert!(motor.voltage == 12.6);
         assert!(motor.current <= params.i_max);
         assert!(motor.duty == 1.0);
@@ -95,9 +94,9 @@ mod tests {
         let mut motor = MotorState::default();
         let params = MotorParams::default();
 
-        let t = motor.compute(-1.0, 0.0, 0.055, 12.6, &params);
+        let t = motor.compute(-1.0, 0.0, 12.6, &params);
 
-        assert!(t >= -11.5);
+        assert!((t + 0.0819).abs() <= 0.001);
         assert!(motor.voltage == -12.6);
         assert!(motor.current <= -params.i_max);
         assert!(motor.duty == -1.0);
@@ -108,7 +107,7 @@ mod tests {
         let mut motor = MotorState::default();
         let params = MotorParams::default();
 
-        let t = motor.compute(0.02, 40.0, 0.055, 12.6, &params);
+        let t = motor.compute(0.02, 727.3, 12.6, &params);
 
         assert!(t <= 11.5);
         assert!(motor.voltage <= 2.0);

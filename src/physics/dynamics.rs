@@ -31,8 +31,11 @@ pub fn update_physics(
     let duty = input.throttle;
     let t_motor = motor.compute(
         duty,
-        state.vx,
-        params.r_wheel,
+        (wheel_dynamics.omega_fl
+            + wheel_dynamics.omega_fr
+            + wheel_dynamics.omega_rl
+            + wheel_dynamics.omega_rr)
+            / 4.0,
         battery.v_terminal,
         &motor_params,
     );
