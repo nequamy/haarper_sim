@@ -7,6 +7,7 @@ mod vehicle;
 mod camera;
 mod track;
 
+use bevy_egui::EguiPlugin;
 use bevy_rapier3d::plugin::RapierPhysicsPlugin;
 use camera::CameraPlugin;
 use physics::PhysicsPlugin;
