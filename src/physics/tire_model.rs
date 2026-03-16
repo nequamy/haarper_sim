@@ -29,12 +29,12 @@ pub struct TireParams {
 impl Default for TireParams {
     fn default() -> Self {
         Self {
-            mu: 0.9,
+            mu: 1.2,
             ex: 0.0,
             ey: 0.0,
-            bx: 10.0,
+            bx: 15.0,
             cx: 1.65,
-            by: 10.0,
+            by: 15.0,
             cy: 1.3,
             bxa: 12.0,
             cxa: 1.0,
