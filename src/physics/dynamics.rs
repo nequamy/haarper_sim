@@ -4,6 +4,7 @@ use bevy_rapier3d::prelude::*;
 
 use crate::physics::battery::{BatteryParams, BatteryState};
 use crate::physics::motor::{MotorParams, MotorState};
+use crate::physics::servo::{ServoParams, ServoState};
 use crate::physics::state::{Robot, VehicleParams, VehicleState};
 use crate::physics::tire_model::{Pacejka, TireParams};
 use crate::vehicle::input::VehicleInput;
@@ -16,11 +17,13 @@ pub fn update_physics(
     tire: Res<TireParams>,
     battery_params: Res<BatteryParams>,
     motor_params: Res<MotorParams>,
+    servo_params: Res<ServoParams>,
     mut battery: ResMut<BatteryState>,
     mut motor: ResMut<MotorState>,
     mut wheel_spd: ResMut<WheelAngleSpeed>,
     mut wheel_dynamics: ResMut<WheelDynamics>,
     mut state: ResMut<VehicleState>,
+    mut servo: ResMut<ServoState>,
 ) {
     let pacejka = Pacejka {
         params: tire.clone(),
@@ -56,11 +59,13 @@ pub fn update_physics(
     let vx_rr = state.vx + (params.w / 2.0) * state.omega;
     let vy_rr = state.vy - params.lr * state.omega;
 
-    state.delta_fl = (params.wheelbase * input.steering.tan()
-        / (params.wheelbase - params.w / 2.0 * input.steering.tan()))
+    servo.update(input.steering, dt, &servo_params);
+
+    state.delta_fl = (params.wheelbase * servo.delta.tan()
+        / (params.wheelbase - params.w / 2.0 * servo.delta.tan()))
     .atan();
-    state.delta_fr = (params.wheelbase * input.steering.tan()
-        / (params.wheelbase + params.w / 2.0 * input.steering.tan()))
+    state.delta_fr = (params.wheelbase * servo.delta.tan()
+        / (params.wheelbase + params.w / 2.0 * servo.delta.tan()))
     .atan();
 
     let vx_fl_w = vx_fl * state.delta_fl.cos() + vy_fl * state.delta_fl.sin();

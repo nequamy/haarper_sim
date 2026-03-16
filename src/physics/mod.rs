@@ -4,6 +4,7 @@ pub mod battery;
 pub mod collision;
 pub mod dynamics;
 pub mod motor;
+pub mod servo;
 pub mod state;
 pub mod tire_model;
 
@@ -15,6 +16,7 @@ use tire_model::TireParams;
 use crate::physics::{
     battery::{BatteryParams, BatteryState},
     motor::{MotorParams, MotorState},
+    servo::{ServoParams, ServoState},
 };
 
 pub struct PhysicsPlugin;
@@ -28,6 +30,8 @@ impl Plugin for PhysicsPlugin {
             .insert_resource(MotorState::default())
             .insert_resource(BatteryParams::default())
             .insert_resource(BatteryState::new())
+            .insert_resource(ServoParams::default())
+            .insert_resource(ServoState::default())
             .insert_resource(Time::<Fixed>::from_hz(500.0))
             .add_systems(
                 FixedUpdate,
