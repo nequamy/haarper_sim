@@ -72,11 +72,11 @@ pub fn spawn_vehicle(
         });
 }
 
-fn get_start_position(track: &TrackData) -> (f32, f32, f32) {
+pub fn get_start_position(track: &TrackData) -> (f32, f32, f32) {
     (track.data[0].0.x, 0.095, track.data[0].0.y)
 }
 
-fn get_start_heading(track: &TrackData) -> f32 {
+pub fn get_start_heading(track: &TrackData) -> f32 {
     if track.data.len() < 10 {
         return std::f32::consts::TAU;
     }

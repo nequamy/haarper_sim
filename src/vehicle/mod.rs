@@ -1,4 +1,5 @@
 pub mod input;
+pub mod reset;
 pub mod spawn;
 pub mod wheel;
 
@@ -11,6 +12,8 @@ use wheel::{
 
 use bevy::prelude::*;
 
+use crate::vehicle::reset::reset_world;
+
 pub struct VehiclePlugin;
 
 impl Plugin for VehiclePlugin {
@@ -20,6 +23,7 @@ impl Plugin for VehiclePlugin {
             .insert_resource(WheelAngleSpeed::default())
             .insert_resource(WheelDynamics::new())
             .add_systems(Update, read_input)
+            .add_systems(Update, reset_world.after(read_input))
             .add_systems(Update, update_wheel_angle)
             .add_systems(Update, update_forward_right_wheel_angle)
             .add_systems(Update, update_forward_left_wheel_angle);

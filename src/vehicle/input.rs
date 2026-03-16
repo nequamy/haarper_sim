@@ -20,10 +20,6 @@ pub fn read_input(
     keys: Res<ButtonInput<KeyCode>>,
     mut input: ResMut<VehicleInput>,
 ) {
-    if keys.pressed(KeyCode::ShiftLeft) {
-        return;
-    }
-
     let dt = time.delta_secs();
     let throttle_rate = 3.0;
     let steering_rate = 2.0;
