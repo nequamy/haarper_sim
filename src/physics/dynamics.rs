@@ -97,42 +97,65 @@ pub fn update_physics(
         + delta_fz_lat / 2.0)
         .max(0.0);
 
-    let kappa_fl = (wheel_dynamics.omega_fl * params.r_wheel - vx_fl_w)
-        / (wheel_dynamics.omega_fl * params.r_wheel)
-            .abs()
-            .max(vx_fl_w.abs())
-            .max(0.01);
-    let kappa_fr = (wheel_dynamics.omega_fr * params.r_wheel - vx_fr_w)
-        / (wheel_dynamics.omega_fr * params.r_wheel)
-            .abs()
-            .max(vx_fr_w.abs())
-            .max(0.01);
-    let kappa_rl = (wheel_dynamics.omega_rl * params.r_wheel - vx_rl)
-        / (wheel_dynamics.omega_rl * params.r_wheel)
-            .abs()
-            .max(vx_rl.abs())
-            .max(0.01);
-    let kappa_rr = (wheel_dynamics.omega_rr * params.r_wheel - vx_rr)
-        / (wheel_dynamics.omega_rr * params.r_wheel)
-            .abs()
-            .max(vx_rr.abs())
-            .max(0.01);
+    let omega_r_fl = wheel_dynamics.omega_fl * params.r_wheel;
+    let omega_r_fr = wheel_dynamics.omega_fr * params.r_wheel;
+    let omega_r_rl = wheel_dynamics.omega_rl * params.r_wheel;
+    let omega_r_rr = wheel_dynamics.omega_rr * params.r_wheel;
 
-    let (fx_fl, fy_fl) = pacejka.compute(safe_slip_angle(vy_fl_w, vx_fl_w), kappa_fl, fz_fl);
-    let (fx_fr, fy_fr) = pacejka.compute(safe_slip_angle(vy_fr_w, vx_fr_w), kappa_fr, fz_fr);
-    let (fx_rl, fy_rl) = pacejka.compute(safe_slip_angle(vy_rl, vx_rl), kappa_rl, fz_rl);
-    let (fx_rr, fy_rr) = pacejka.compute(safe_slip_angle(vy_rr, vx_rr), kappa_rr, fz_rr);
+    wheel_dynamics.kappa[0] +=
+        ((omega_r_fl - vx_fl_w - vx_fl_w.abs() * wheel_dynamics.kappa[0]) / tire.sigma_kappa) * dt;
+    wheel_dynamics.kappa[1] +=
+        ((omega_r_fr - vx_fr_w - vx_fr_w.abs() * wheel_dynamics.kappa[1]) / tire.sigma_kappa) * dt;
+    wheel_dynamics.kappa[2] +=
+        ((omega_r_rl - vx_rl - vx_rl.abs() * wheel_dynamics.kappa[2]) / tire.sigma_kappa) * dt;
+    wheel_dynamics.kappa[3] +=
+        ((omega_r_rr - vx_rr - vx_rr.abs() * wheel_dynamics.kappa[3]) / tire.sigma_kappa) * dt;
+
+    wheel_dynamics.kappa[0] = wheel_dynamics.kappa[0].clamp(-1.0, 1.0);
+    wheel_dynamics.kappa[1] = wheel_dynamics.kappa[1].clamp(-1.0, 1.0);
+    wheel_dynamics.kappa[2] = wheel_dynamics.kappa[2].clamp(-1.0, 1.0);
+    wheel_dynamics.kappa[3] = wheel_dynamics.kappa[3].clamp(-1.0, 1.0);
+
+    if vx_fl_w.abs() < 0.1 && vy_fl_w.abs() < 0.1 {
+        wheel_dynamics.alpha[0] *= 0.95;
+    } else {
+        wheel_dynamics.alpha[0] +=
+            ((-vy_fl_w - vx_fl_w.abs() * wheel_dynamics.alpha[0]) / tire.sigma_alpha) * dt;
+    }
+    if vx_fr_w.abs() < 0.1 && vy_fr_w.abs() < 0.1 {
+        wheel_dynamics.alpha[1] *= 0.95;
+    } else {
+        wheel_dynamics.alpha[1] +=
+            ((-vy_fr_w - vx_fr_w.abs() * wheel_dynamics.alpha[1]) / tire.sigma_alpha) * dt;
+    }
+    if vx_rl.abs() < 0.1 && vy_rl.abs() < 0.1 {
+        wheel_dynamics.alpha[2] *= 0.95;
+    } else {
+        wheel_dynamics.alpha[2] +=
+            ((-vy_rl - vx_rl.abs() * wheel_dynamics.alpha[2]) / tire.sigma_alpha) * dt;
+    }
+    if vx_rr.abs() < 0.1 && vy_rr.abs() < 0.1 {
+        wheel_dynamics.alpha[3] *= 0.95;
+    } else {
+        wheel_dynamics.alpha[3] +=
+            ((-vy_rr - vx_rr.abs() * wheel_dynamics.alpha[3]) / tire.sigma_alpha) * dt;
+    }
+
+    wheel_dynamics.alpha[0] = wheel_dynamics.alpha[0].clamp(-1.0, 1.0);
+    wheel_dynamics.alpha[1] = wheel_dynamics.alpha[1].clamp(-1.0, 1.0);
+    wheel_dynamics.alpha[2] = wheel_dynamics.alpha[2].clamp(-1.0, 1.0);
+    wheel_dynamics.alpha[3] = wheel_dynamics.alpha[3].clamp(-1.0, 1.0);
+
+    let (fx_fl, fy_fl) = pacejka.compute(wheel_dynamics.alpha[0], wheel_dynamics.kappa[0], fz_fl);
+    let (fx_fr, fy_fr) = pacejka.compute(wheel_dynamics.alpha[1], wheel_dynamics.kappa[1], fz_fr);
+    let (fx_rl, fy_rl) = pacejka.compute(wheel_dynamics.alpha[2], wheel_dynamics.kappa[2], fz_rl);
+    let (fx_rr, fy_rr) = pacejka.compute(wheel_dynamics.alpha[3], wheel_dynamics.kappa[3], fz_rr);
 
     debug_forces.fx = [fx_fl, fx_fr, fx_rl, fx_rr];
     debug_forces.fy = [fy_fl, fy_fr, fy_rl, fy_rr];
     debug_forces.fz = [fz_fl, fz_fr, fz_rl, fz_rr];
-    debug_forces.kappa = [kappa_fl, kappa_fr, kappa_rl, kappa_rr];
-    debug_forces.alpha = [
-        safe_slip_angle(vy_fl_w, vx_fl_w),
-        safe_slip_angle(vy_fr_w, vx_fr_w),
-        safe_slip_angle(vy_rl, vx_rl),
-        safe_slip_angle(vy_rr, vx_rr),
-    ];
+    debug_forces.kappa = wheel_dynamics.kappa;
+    debug_forces.alpha = wheel_dynamics.alpha;
 
     wheel_dynamics.omega_fl += (t_per_wheel
         - fx_fl * params.r_wheel

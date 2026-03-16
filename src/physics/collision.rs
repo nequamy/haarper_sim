@@ -1,10 +1,14 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::KinematicCharacterControllerOutput;
 
-use crate::physics::state::{Robot, VehicleState};
+use crate::{
+    physics::state::{Robot, VehicleState},
+    vehicle::wheel::WheelDynamics,
+};
 
 pub fn sync_vehicle_after_collision(
     mut state: ResMut<VehicleState>,
+    mut wheel: ResMut<WheelDynamics>,
     query: Query<&Transform, With<Robot>>,
     controller: Query<&KinematicCharacterControllerOutput, With<Robot>>,
 ) {
@@ -50,10 +54,10 @@ pub fn sync_vehicle_after_collision(
         wx -= 1.15 * v_norm * nx;
         wy -= 1.15 * v_norm * nz;
 
-        let omega = (state.vx * state.vx + state.vy * state.vy).sqrt().max(0.1);
-
         state.vx = wx * state.yaw.cos() + wy * state.yaw.sin();
         state.vy = -wx * state.yaw.sin() + wy * state.yaw.cos();
-        // state.omega *= (1.0 - 0.5 * (v_norm.abs() / omega)).clamp(0.0, 1.0);
+
+        wheel.kappa = [0.0; 4];
+        wheel.alpha = [0.0; 4];
     }
 }

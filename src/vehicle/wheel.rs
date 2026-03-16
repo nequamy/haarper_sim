@@ -22,6 +22,8 @@ pub struct WheelDynamics {
     pub omega_rl: f32,
     pub omega_rr: f32,
     pub j_eff: f32,
+    pub kappa: [f32; 4],
+    pub alpha: [f32; 4],
 }
 
 impl WheelDynamics {
@@ -32,6 +34,8 @@ impl WheelDynamics {
             omega_rl: 0.0,
             omega_rr: 0.0,
             j_eff: 0.0012,
+            kappa: [0.0, 0.0, 0.0, 0.0],
+            alpha: [0.0, 0.0, 0.0, 0.0],
         }
     }
 }

@@ -24,6 +24,9 @@ pub struct TireParams {
     cyk: f32,
     /// Чувствительность боковой силы к продольному скольжению
     byk: f32,
+    /// Параметры релаксации
+    pub sigma_kappa: f32,
+    pub sigma_alpha: f32,
 }
 
 impl Default for TireParams {
@@ -40,6 +43,8 @@ impl Default for TireParams {
             cxa: 1.0,
             cyk: 1.0,
             byk: 10.0,
+            sigma_kappa: 0.1,
+            sigma_alpha: 0.2,
         }
     }
 }
