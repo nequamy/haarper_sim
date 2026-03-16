@@ -118,8 +118,6 @@ pub fn debug_panel(
             ui.checkbox(&mut vis.show_slip, "Slip angle");
             ui.checkbox(&mut vis.show_trail, "Trail");
             ui.checkbox(&mut vis.show_tire_forces, "Tire forces");
-            ui.checkbox(&mut vis.show_weight_transfer, "Weight transfer");
-            ui.checkbox(&mut vis.show_wireframe, "Wireframe");
         });
 
     Ok(())

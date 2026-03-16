@@ -7,8 +7,8 @@ pub mod resources;
 
 use crate::ui::{
     gizmos::{
-        record_trail, update_forces_gizmos, update_slip_angle, update_trail_gizmos,
-        update_velocity_gizmos,
+        record_trail, update_forces_gizmos, update_slip_angle, update_slip_ratio,
+        update_trail_gizmos, update_velocity_gizmos,
     },
     panel::{debug_panel, update_process_diagnostic},
     resources::{DebugForces, DebugVisibility, ProcessDiagnostics, TrailHistory},
@@ -28,6 +28,7 @@ impl Plugin for DebugUIPlugin {
             .add_systems(Update, update_velocity_gizmos)
             .add_systems(Update, update_forces_gizmos)
             .add_systems(Update, update_slip_angle)
+            .add_systems(Update, update_slip_ratio)
             .add_systems(Update, (record_trail, update_trail_gizmos).chain())
             .add_systems(Update, update_process_diagnostic);
     }

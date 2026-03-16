@@ -1,5 +1,5 @@
 use bevy::{
-    color::palettes::css::{BLUE, GREEN, RED, YELLOW},
+    color::palettes::css::{BLUE, GRAY, GREEN, RED, YELLOW},
     math::ops::atan2,
     prelude::*,
 };
@@ -137,5 +137,46 @@ pub fn update_slip_angle(
             })
             .collect();
         gizmo.linestrip(arc_points, YELLOW);
+    }
+}
+
+pub fn update_slip_ratio(
+    mut gizmo: Gizmos,
+    state: Res<VehicleState>,
+    params: Res<VehicleParams>,
+    forces: Res<DebugForces>,
+    debug: Res<DebugVisibility>,
+) {
+    if !debug.show_slip {
+        return;
+    }
+    let forward = Vec3::new(state.yaw.cos(), 0.0, state.yaw.sin());
+    let right = Vec3::new(-state.yaw.sin(), 0.0, state.yaw.cos());
+
+    let cg = Vec3::new(state.x, 0.055, state.y);
+
+    let offsets = [
+        (params.lf, -params.w / 2.0 - 0.025, state.delta_fl),
+        (params.lf, params.w / 2.0 + 0.025, state.delta_fr),
+        (-params.lr + 0.010, -params.w / 2.0 - 0.025, 0.0),
+        (-params.lr + 0.010, params.w / 2.0 + 0.025, 0.0),
+    ];
+
+    for (i, (fwd_off, side_off, angle)) in offsets.iter().enumerate() {
+        let pos = cg + forward * *fwd_off + right * *side_off;
+        let normal = -forward * angle.sin() + right * angle.cos();
+
+        let rot = Quat::from_rotation_arc(Vec3::Z, normal.normalize());
+        let iso = Isometry3d::new(pos, rot);
+
+        gizmo.circle(iso, params.r_wheel, GRAY);
+
+        let fill = forces.kappa[i].abs().min(1.0);
+        let steps = 100;
+        let filled = (fill * steps as f32) as usize;
+        for j in 1..=filled {
+            let r = params.r_wheel * (j as f32 / steps as f32);
+            gizmo.circle(iso, r, Color::srgb(fill, 1.0 - fill, 0.0));
+        }
     }
 }
