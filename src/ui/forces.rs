@@ -1,9 +1,10 @@
 use bevy::prelude::*;
 
+#[derive(Resource, Default)]
 pub struct DebugForces {
-    fx: [f32; 4],
-    fy: [f32; 4],
-    kappa: [f32; 4],
-    alpha: [f32; 4],
-    positions: [Vec2; 4],
+    pub fx: [f32; 4],
+    pub fy: [f32; 4],
+    pub fz: [f32; 4],
+    pub kappa: [f32; 4],
+    pub alpha: [f32; 4],
 }

@@ -7,6 +7,7 @@ use crate::physics::motor::{MotorParams, MotorState};
 use crate::physics::servo::{ServoParams, ServoState};
 use crate::physics::state::{Robot, VehicleParams, VehicleState};
 use crate::physics::tire_model::{Pacejka, TireParams};
+use crate::ui::forces::DebugForces;
 use crate::vehicle::input::VehicleInput;
 use crate::vehicle::wheel::{WheelAngleSpeed, WheelDynamics};
 
@@ -24,6 +25,7 @@ pub fn update_physics(
     mut wheel_dynamics: ResMut<WheelDynamics>,
     mut state: ResMut<VehicleState>,
     mut servo: ResMut<ServoState>,
+    mut debug_forces: ResMut<DebugForces>,
 ) {
     let pacejka = Pacejka {
         params: tire.clone(),
@@ -77,52 +79,57 @@ pub fn update_physics(
     let delta_fz_lat = params.m * state.ay * params.h_cg / params.w;
 
     // Силы
-    let (fx_fl, fy_fl) = pacejka.compute(
+    let fz_fl = ((params.m * 9.81 * params.lr / (params.wheelbase * 2.0))
+        - delta_fz_long / 2.0
+        - delta_fz_lat / 2.0)
+        .max(0.0);
+    let fz_fr = ((params.m * 9.81 * params.lr / (params.wheelbase * 2.0)) - delta_fz_long / 2.0
+        + delta_fz_lat / 2.0)
+        .max(0.0);
+    let fz_rl = ((params.m * 9.81 * params.lf / (params.wheelbase * 2.0)) + delta_fz_long / 2.0
+        - delta_fz_lat / 2.0)
+        .max(0.0);
+    let fz_rr = ((params.m * 9.81 * params.lf / (params.wheelbase * 2.0))
+        + delta_fz_long / 2.0
+        + delta_fz_lat / 2.0)
+        .max(0.0);
+
+    let kappa_fl = (wheel_dynamics.omega_fl * params.r_wheel - vx_fl_w)
+        / (wheel_dynamics.omega_fl * params.r_wheel)
+            .abs()
+            .max(vx_fl_w.abs())
+            .max(0.01);
+    let kappa_fr = (wheel_dynamics.omega_fr * params.r_wheel - vx_fr_w)
+        / (wheel_dynamics.omega_fr * params.r_wheel)
+            .abs()
+            .max(vx_fr_w.abs())
+            .max(0.01);
+    let kappa_rl = (wheel_dynamics.omega_rl * params.r_wheel - vx_rl)
+        / (wheel_dynamics.omega_rl * params.r_wheel)
+            .abs()
+            .max(vx_rl.abs())
+            .max(0.01);
+    let kappa_rr = (wheel_dynamics.omega_rr * params.r_wheel - vx_rr)
+        / (wheel_dynamics.omega_rr * params.r_wheel)
+            .abs()
+            .max(vx_rr.abs())
+            .max(0.01);
+
+    let (fx_fl, fy_fl) = pacejka.compute(safe_slip_angle(vy_fl_w, vx_fl_w), kappa_fl, fz_fl);
+    let (fx_fr, fy_fr) = pacejka.compute(safe_slip_angle(vy_fr_w, vx_fr_w), kappa_fr, fz_fr);
+    let (fx_rl, fy_rl) = pacejka.compute(safe_slip_angle(vy_rl, vx_rl), kappa_rl, fz_rl);
+    let (fx_rr, fy_rr) = pacejka.compute(safe_slip_angle(vy_rr, vx_rr), kappa_rr, fz_rr);
+
+    debug_forces.fx = [fx_fl, fx_fr, fx_rl, fx_rr];
+    debug_forces.fy = [fy_fl, fy_fr, fy_rl, fy_rr];
+    debug_forces.fz = [fz_fl, fz_fr, fz_rl, fz_rr];
+    debug_forces.kappa = [kappa_fl, kappa_fr, kappa_rl, kappa_rr];
+    debug_forces.alpha = [
         safe_slip_angle(vy_fl_w, vx_fl_w),
-        (wheel_dynamics.omega_fl * params.r_wheel - vx_fl_w)
-            / (wheel_dynamics.omega_fl * params.r_wheel)
-                .abs()
-                .max(vx_fl_w.abs())
-                .max(0.01),
-        ((params.m * 9.81 * params.lr / (params.wheelbase * 2.0))
-            - delta_fz_long / 2.0
-            - delta_fz_lat / 2.0)
-            .max(0.0),
-    );
-    let (fx_fr, fy_fr) = pacejka.compute(
         safe_slip_angle(vy_fr_w, vx_fr_w),
-        (wheel_dynamics.omega_fr * params.r_wheel - vx_fr_w)
-            / (wheel_dynamics.omega_fr * params.r_wheel)
-                .abs()
-                .max(vx_fr_w.abs())
-                .max(0.01),
-        ((params.m * 9.81 * params.lr / (params.wheelbase * 2.0)) - delta_fz_long / 2.0
-            + delta_fz_lat / 2.0)
-            .max(0.0),
-    );
-    let (fx_rl, fy_rl) = pacejka.compute(
         safe_slip_angle(vy_rl, vx_rl),
-        (wheel_dynamics.omega_rl * params.r_wheel - vx_rl)
-            / (wheel_dynamics.omega_rl * params.r_wheel)
-                .abs()
-                .max(vx_rl.abs())
-                .max(0.01),
-        ((params.m * 9.81 * params.lf / (params.wheelbase * 2.0)) + delta_fz_long / 2.0
-            - delta_fz_lat / 2.0)
-            .max(0.0),
-    );
-    let (fx_rr, fy_rr) = pacejka.compute(
         safe_slip_angle(vy_rr, vx_rr),
-        (wheel_dynamics.omega_rr * params.r_wheel - vx_rr)
-            / (wheel_dynamics.omega_rr * params.r_wheel)
-                .abs()
-                .max(vx_rr.abs())
-                .max(0.01),
-        ((params.m * 9.81 * params.lf / (params.wheelbase * 2.0))
-            + delta_fz_long / 2.0
-            + delta_fz_lat / 2.0)
-            .max(0.0),
-    );
+    ];
 
     wheel_dynamics.omega_fl += (t_per_wheel
         - fx_fl * params.r_wheel
