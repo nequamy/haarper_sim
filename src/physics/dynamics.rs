@@ -75,6 +75,9 @@ pub fn update_physics(
     let vx_fr_w = vx_fr * state.delta_fr.cos() + vy_fr * state.delta_fr.sin();
     let vy_fr_w = -vx_fr * state.delta_fr.sin() + vy_fr * state.delta_fr.cos();
 
+    debug_forces.wheel_vx = [vx_fl_w, vx_fr_w, vx_rl, vx_rr];
+    debug_forces.wheel_vy = [vy_fl_w, vy_fr_w, vy_rl, vy_rr];
+
     let delta_fz_long = params.m * state.ax * params.h_cg / params.wheelbase;
     let delta_fz_lat = params.m * state.ay * params.h_cg / params.w;
 

@@ -23,9 +23,12 @@ impl Plugin for DebugUIPlugin {
             .init_resource::<ProcessDiagnostics>()
             .insert_resource(DebugVisibility::default())
             .insert_resource(DebugForces::default())
+            .insert_resource(TrailHistory::default())
             .add_systems(EguiPrimaryContextPass, debug_panel)
             .add_systems(Update, update_velocity_gizmos)
             .add_systems(Update, update_forces_gizmos)
+            .add_systems(Update, update_slip_angle)
+            .add_systems(Update, (record_trail, update_trail_gizmos).chain())
             .add_systems(Update, update_process_diagnostic);
     }
 }

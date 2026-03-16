@@ -1,5 +1,6 @@
 use bevy::{
-    color::palettes::css::{BLUE, GREEN, RED},
+    color::palettes::css::{BLUE, GREEN, RED, YELLOW},
+    math::ops::atan2,
     prelude::*,
 };
 
@@ -57,5 +58,84 @@ pub fn update_forces_gizmos(
         gizmo.arrow(pos, pos + forward * forces.fx[i] * scale, RED);
         gizmo.arrow(pos, pos + right * forces.fy[i] * scale, GREEN);
         gizmo.arrow(pos, pos + up * forces.fz[i] * scale, BLUE);
+    }
+}
+
+pub fn record_trail(state: Res<VehicleState>, mut trail: ResMut<TrailHistory>) {
+    let pos = Vec3::new(state.x, 0.05, state.y);
+
+    if trail.trail.is_empty()
+        || pos.distance(*trail.trail.back().unwrap_or(&Vec3::new(0.0, 0.0, 0.0))) > 0.05
+    {
+        trail.trail.push_back(pos);
+    }
+
+    if trail.trail.len() > 1000 {
+        trail.trail.pop_front();
+    }
+}
+
+pub fn update_trail_gizmos(
+    mut gizmo: Gizmos,
+    trail: Res<TrailHistory>,
+    debug: Res<DebugVisibility>,
+) {
+    if !debug.show_trail {
+        return;
+    }
+
+    gizmo.linestrip(trail.trail.iter().copied(), RED);
+}
+
+pub fn update_slip_angle(
+    mut gizmo: Gizmos,
+    state: Res<VehicleState>,
+    params: Res<VehicleParams>,
+    forces: Res<DebugForces>,
+    debug: Res<DebugVisibility>,
+) {
+    if !debug.show_slip {
+        return;
+    }
+
+    let forward = Vec3::new(state.yaw.cos(), 0.0, state.yaw.sin());
+    let right = Vec3::new(-state.yaw.sin(), 0.0, state.yaw.cos());
+
+    let cg = Vec3::new(state.x, 0.20, state.y);
+
+    let offsets = [
+        (params.lf, -params.w / 2.0, state.delta_fl),
+        (params.lf, params.w / 2.0, state.delta_fr),
+    ];
+
+    for (i, (fwd_off, side_off, angle)) in offsets.iter().enumerate() {
+        let pos = cg + forward * *fwd_off + right * *side_off;
+        let wheel_dir = forward * angle.cos() + right * angle.sin();
+
+        gizmo.arrow(pos, pos + wheel_dir * 0.5, YELLOW);
+
+        let vel_dir = forward * forces.wheel_vx[i] + right * forces.wheel_vy[i];
+        let vel_norm = vel_dir.normalize_or_zero();
+        gizmo.arrow(pos, pos + vel_norm * 0.5, YELLOW);
+
+        let heading_angle = atan2(wheel_dir.z, wheel_dir.x);
+        let vel_angle = atan2(vel_norm.z, vel_norm.x);
+
+        let mut diff = vel_angle - heading_angle;
+        if diff > std::f32::consts::PI {
+            diff -= std::f32::consts::TAU;
+        }
+        if diff < -std::f32::consts::PI {
+            diff += std::f32::consts::TAU;
+        }
+
+        let arc_points: Vec<Vec3> = (0..=20)
+            .map(|s| {
+                let t = s as f32 / 20.0;
+                let a = heading_angle + diff * t;
+                pos + Vec3::new(a.cos(), 0.0, a.sin()) * 0.3
+            })
+            .collect();
+        gizmo.linestrip(arc_points, YELLOW);
     }
 }
