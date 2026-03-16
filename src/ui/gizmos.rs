@@ -5,7 +5,7 @@ use bevy::{
 
 use crate::{
     physics::state::{VehicleParams, VehicleState},
-    ui::{forces::DebugForces, visibility::DebugVisibility},
+    ui::resources::{DebugForces, DebugVisibility, TrailHistory},
 };
 
 pub fn update_velocity_gizmos(

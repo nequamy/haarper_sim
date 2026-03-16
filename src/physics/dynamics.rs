@@ -7,7 +7,7 @@ use crate::physics::motor::{MotorParams, MotorState};
 use crate::physics::servo::{ServoParams, ServoState};
 use crate::physics::state::{Robot, VehicleParams, VehicleState};
 use crate::physics::tire_model::{Pacejka, TireParams};
-use crate::ui::forces::DebugForces;
+use crate::ui::resources::DebugForces;
 use crate::vehicle::input::VehicleInput;
 use crate::vehicle::wheel::{WheelAngleSpeed, WheelDynamics};
 

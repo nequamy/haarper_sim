@@ -1,16 +1,17 @@
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
 use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
 
-pub mod forces;
 pub mod gizmos;
 pub mod panel;
-pub mod visibility;
+pub mod resources;
 
 use crate::ui::{
-    forces::DebugForces,
-    gizmos::{update_forces_gizmos, update_velocity_gizmos},
-    panel::{ProcessDiagnostics, debug_panel, update_process_diagnostic},
-    visibility::DebugVisibility,
+    gizmos::{
+        record_trail, update_forces_gizmos, update_slip_angle, update_trail_gizmos,
+        update_velocity_gizmos,
+    },
+    panel::{debug_panel, update_process_diagnostic},
+    resources::{DebugForces, DebugVisibility, ProcessDiagnostics, TrailHistory},
 };
 
 pub struct DebugUIPlugin;
