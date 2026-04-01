@@ -7,6 +7,7 @@ use crate::{
         state::{Robot, VehicleState},
     },
     track::TrackData,
+    ui::resources::TrailHistory,
     vehicle::{
         input::VehicleInput,
         spawn::{get_start_heading, get_start_position},
@@ -23,6 +24,7 @@ pub fn reset_world(
     mut motor: ResMut<MotorState>,
     mut input: ResMut<VehicleInput>,
     mut query: Query<&mut Transform, With<Robot>>,
+    mut track_history: ResMut<TrailHistory>,
 ) {
     if !key.just_pressed(KeyCode::KeyR) {
         return;
@@ -52,4 +54,6 @@ pub fn reset_world(
 
     *battery = BatteryState::new();
     *motor = MotorState::default();
+
+    track_history.trail.clear();
 }
