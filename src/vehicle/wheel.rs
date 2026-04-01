@@ -33,7 +33,7 @@ impl WheelDynamics {
             omega_fr: 0.0,
             omega_rl: 0.0,
             omega_rr: 0.0,
-            j_eff: 0.0012,
+            j_eff: 0.0003,
             kappa: [0.0, 0.0, 0.0, 0.0],
             alpha: [0.0, 0.0, 0.0, 0.0],
         }

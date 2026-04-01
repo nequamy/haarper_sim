@@ -208,8 +208,8 @@ pub fn update_physics(
     let vx_old = state.vx;
     let vy_old = state.vy;
 
-    state.ax = sum_fx / params.m;
-    state.ay = sum_fy / params.m;
+    state.ax = sum_fx / params.m + vy_old * state.omega;
+    state.ay = sum_fy / params.m - vx_old * state.omega;
 
     state.vx += ((1.0 / params.m) * (sum_fx + params.m * vy_old * state.omega)) * dt;
     state.vy += ((1.0 / params.m) * (sum_fy - params.m * vx_old * state.omega)) * dt;
@@ -235,12 +235,4 @@ pub fn sync_vehicle_transform(
     ));
 
     tf.rotation = Quat::from_rotation_y(-state.yaw);
-}
-
-fn safe_slip_angle(vy: f32, vx: f32) -> f32 {
-    if vx.abs() < 0.5 {
-        -(vy * 2.0).clamp(-1.0, 1.0)
-    } else {
-        -(vy).atan2(vx.abs())
-    }
 }
