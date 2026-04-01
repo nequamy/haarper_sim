@@ -1,3 +1,5 @@
+use std::f32;
+
 use bevy::ecs::resource::Resource;
 
 #[derive(Resource, Clone)]
@@ -27,6 +29,9 @@ pub struct TireParams {
     /// Параметры релаксации
     pub sigma_kappa: f32,
     pub sigma_alpha: f32,
+    /// Параметры нормализации модели
+    dx_norm: f32,
+    dy_norm: f32,
 }
 
 impl Default for TireParams {
@@ -45,6 +50,8 @@ impl Default for TireParams {
             byk: 10.0,
             sigma_kappa: 0.1,
             sigma_alpha: 0.2,
+            dx_norm: (1.65 * f32::consts::FRAC_PI_2).sin().abs(),
+            dy_norm: (1.3 * f32::consts::FRAC_PI_2).sin().abs(),
         }
     }
 }
@@ -63,15 +70,13 @@ impl Pacejka {
 
     /// Функция для просчета чистой боковой силы одного колеса
     fn lateral(&self, alpha: f32, fz: f32) -> f32 {
-        self.params.mu
-            * fz
+        (self.params.mu * fz / self.params.dy_norm)
             * (self.params.cy * pacejka_base(self.params.by, self.params.ey, alpha)).sin()
     }
 
     /// Функция для расчета чистой продольной силы одного колеса
     fn longitudinal(&self, kappa: f32, fz: f32) -> f32 {
-        self.params.mu
-            * fz
+        (self.params.mu * fz / self.params.dx_norm)
             * (self.params.cx * pacejka_base(self.params.bx, self.params.ex, kappa)).sin()
     }
 
