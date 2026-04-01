@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{Collider, RigidBody};
 
-use crate::vehicle::spawn::spawn_vehicle;
+use crate::{SimState, ui::menu::SelectedTrack, vehicle::spawn::spawn_vehicle};
 
 #[derive(Resource, Default)]
 pub struct TrackData {
@@ -12,18 +12,25 @@ pub struct TrackPlugin;
 
 impl Plugin for TrackPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(TrackData::default())
-            .add_systems(Startup, spawn_track.before(spawn_vehicle));
+        app.insert_resource(TrackData::default()).add_systems(
+            OnEnter(SimState::Running),
+            spawn_track.before(spawn_vehicle),
+        );
     }
 }
 
 fn spawn_track(
+    selected: Res<SelectedTrack>,
     mut commands: Commands,
     mut track_data: ResMut<TrackData>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    track_data.data = load_centerline("assets/tracks/sochi/Sochi_centerline.csv");
+    if selected.name == "Void" {
+        track_data.data = vec![(Vec2::new(0.0, 0.0), 0.0, 0.0)];
+        return;
+    }
+    track_data.data = load_centerline(&selected.path);
 
     let wall_height = 0.3;
     let wall_thickness = 0.02;

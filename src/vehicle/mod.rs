@@ -12,20 +12,34 @@ use wheel::{
 
 use bevy::prelude::*;
 
-use crate::vehicle::reset::reset_world;
+use crate::{SimState, vehicle::reset::reset_world};
 
 pub struct VehiclePlugin;
 
 impl Plugin for VehiclePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_vehicle)
+        app.add_systems(OnEnter(SimState::Running), spawn_vehicle)
             .insert_resource(VehicleInput::default())
             .insert_resource(WheelAngleSpeed::default())
             .insert_resource(WheelDynamics::new())
-            .add_systems(Update, read_input)
-            .add_systems(Update, reset_world.after(read_input))
-            .add_systems(Update, update_wheel_angle)
-            .add_systems(Update, update_forward_right_wheel_angle)
-            .add_systems(Update, update_forward_left_wheel_angle);
+            .add_systems(Update, read_input.run_if(in_state(SimState::Running)))
+            .add_systems(
+                Update,
+                reset_world
+                    .after(read_input)
+                    .run_if(in_state(SimState::Running)),
+            )
+            .add_systems(
+                Update,
+                update_wheel_angle.run_if(in_state(SimState::Running)),
+            )
+            .add_systems(
+                Update,
+                update_forward_right_wheel_angle.run_if(in_state(SimState::Running)),
+            )
+            .add_systems(
+                Update,
+                update_forward_left_wheel_angle.run_if(in_state(SimState::Running)),
+            );
     }
 }

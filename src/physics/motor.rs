@@ -109,7 +109,7 @@ mod tests {
 
         let t = motor.compute(0.02, 727.3, 12.6, &params);
 
-        assert!(t <= 11.5);
+        assert!(t == 0.0);
         assert!(motor.voltage <= 2.0);
         assert!(motor.current >= -params.i_max);
         assert!(motor.duty == 0.02);

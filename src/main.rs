@@ -7,13 +7,19 @@ mod vehicle;
 mod camera;
 mod track;
 
-use bevy_egui::EguiPlugin;
 use bevy_rapier3d::plugin::RapierPhysicsPlugin;
 use camera::CameraPlugin;
 use physics::PhysicsPlugin;
 use track::TrackPlugin;
 use ui::DebugUIPlugin;
 use vehicle::VehiclePlugin;
+
+#[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum SimState {
+    #[default]
+    Menu,
+    Running,
+}
 
 fn main() {
     App::new()
@@ -24,6 +30,7 @@ fn main() {
         .add_plugins(PhysicsPlugin)
         .add_plugins(DebugUIPlugin)
         .add_plugins(TrackPlugin)
+        .init_state::<SimState>()
         .add_systems(Startup, setup)
         .run();
 }

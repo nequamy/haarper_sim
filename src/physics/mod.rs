@@ -13,10 +13,13 @@ use dynamics::{sync_vehicle_transform, update_physics};
 use state::{VehicleParams, VehicleState};
 use tire_model::TireParams;
 
-use crate::physics::{
-    battery::{BatteryParams, BatteryState},
-    motor::{MotorParams, MotorState},
-    servo::{ServoParams, ServoState},
+use crate::{
+    SimState,
+    physics::{
+        battery::{BatteryParams, BatteryState},
+        motor::{MotorParams, MotorState},
+        servo::{ServoParams, ServoState},
+    },
 };
 
 pub struct PhysicsPlugin;
@@ -35,8 +38,13 @@ impl Plugin for PhysicsPlugin {
             .insert_resource(Time::<Fixed>::from_hz(500.0))
             .add_systems(
                 FixedUpdate,
-                (update_physics, sync_vehicle_transform).chain(),
+                (update_physics, sync_vehicle_transform)
+                    .chain()
+                    .run_if(in_state(SimState::Running)),
             )
-            .add_systems(PostUpdate, sync_vehicle_after_collision);
+            .add_systems(
+                PostUpdate,
+                sync_vehicle_after_collision.run_if(in_state(SimState::Running)),
+            );
     }
 }

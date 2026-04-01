@@ -7,17 +7,12 @@ use bevy::prelude::*;
 use bevy_panorbit_camera::PanOrbitCamera;
 use bevy_panorbit_camera::PanOrbitCameraPlugin;
 
+use crate::SimState;
 use crate::physics::state::VehicleState;
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 struct CameraMode {
     follow: bool,
-}
-
-impl Default for CameraMode {
-    fn default() -> Self {
-        Self { follow: false }
-    }
 }
 
 pub struct CameraPlugin;
@@ -27,7 +22,7 @@ impl Plugin for CameraPlugin {
         app.init_resource::<CameraMode>()
             .add_plugins(PanOrbitCameraPlugin)
             .add_systems(Startup, spawn_camera)
-            .add_systems(Update, camera_follow);
+            .add_systems(Update, camera_follow.run_if(in_state(SimState::Running)));
     }
 }
 
@@ -53,7 +48,6 @@ fn spawn_camera(mut commands: Commands) {
             directional_light_color: Color::srgba(1.0, 0.95, 0.85, 0.5),
             directional_light_exponent: 30.0,
             falloff: FogFalloff::Exponential { density: 0.01 },
-            ..default()
         },
     ));
 }

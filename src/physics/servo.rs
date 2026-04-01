@@ -12,7 +12,7 @@ impl Default for ServoParams {
     fn default() -> Self {
         Self {
             omega_n: 17.0,
-            zeta: 0.8,
+            zeta: 1.2,
             omega_max: 10.5,
             delta_max: 0.35,
         }
