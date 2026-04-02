@@ -32,7 +32,7 @@ fn spawn_track(
         track_data.data = vec![(Vec2::new(0.0, 0.0), 0.0, 0.0)];
         return;
     }
-    track_data.data = load_centerline(&selected.path);
+    track_data.data = load_centerline(&selected.path).unwrap_or_default();
 
     let wall_height = 0.3;
     let wall_thickness = 0.02;
@@ -136,20 +136,27 @@ fn spawn_track(
     }
 }
 
-fn load_centerline(path: &str) -> Vec<(Vec2, f32, f32)> {
-    let content = std::fs::read_to_string(path).expect("Failed to read track CSV");
+fn load_centerline(path: &str) -> Result<Vec<(Vec2, f32, f32)>, String> {
+    let content = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
     let mut data: Vec<(Vec2, f32, f32)> = content
         .lines()
         .filter(|line| !line.starts_with('#') && !line.is_empty())
         .map(|line| {
-            let vals: Vec<f32> = line.split(',').map(|s| s.trim().parse().unwrap()).collect();
-            (Vec2::new(vals[0], vals[1]), vals[2], vals[3])
+            let vals = line
+                .split(',')
+                .map(|s| {
+                    s.trim()
+                        .parse::<f32>()
+                        .map_err(|e| format!("Parse error: {e}"))
+                })
+                .collect::<Result<Vec<f32>, String>>()?;
+            Ok((Vec2::new(vals[0], vals[1]), vals[2], vals[3]))
         })
-        .collect();
+        .collect::<Result<Vec<(Vec2, f32, f32)>, String>>()?;
 
     let center = data.iter().map(|(p, _, _)| *p).sum::<Vec2>() / data.len() as f32;
     for (pos, _, _) in &mut data {
         *pos -= center;
     }
-    data
+    Ok(data)
 }
