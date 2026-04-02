@@ -1,4 +1,4 @@
-use crate::physics::state::{Robot, VehicleState};
+use crate::physics::state::{GameEntity, Robot, VehicleState};
 use crate::track::TrackData;
 use crate::vehicle::wheel::{Wheel, WheelFL, WheelFR};
 use bevy::math::ops::atan2;
@@ -33,6 +33,7 @@ pub fn spawn_vehicle(
             },
             CollisionGroups::new(Group::GROUP_2, Group::GROUP_1),
             Robot,
+            GameEntity,
         ))
         .with_children(|parent| {
             let wheel_rot = Quat::from_rotation_x(std::f32::consts::FRAC_PI_2);

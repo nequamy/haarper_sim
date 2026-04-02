@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{Collider, RigidBody};
 
-use crate::{SimState, ui::menu::SelectedTrack, vehicle::spawn::spawn_vehicle};
+use crate::{
+    SimState, physics::state::GameEntity, ui::menu::SelectedTrack, vehicle::spawn::spawn_vehicle,
+};
 
 #[derive(Resource, Default)]
 pub struct TrackData {
@@ -76,6 +78,7 @@ fn spawn_track(
                 .with_rotation(Quat::from_rotation_y(-l_angle)),
             Collider::cuboid(l_length / 2.0, wall_height / 2.0, wall_thickness / 2.0),
             RigidBody::Fixed,
+            GameEntity,
         ));
 
         let rp0 = right_points[i];
@@ -92,6 +95,7 @@ fn spawn_track(
                 .with_rotation(Quat::from_rotation_y(-r_angle)),
             Collider::cuboid(r_length / 2.0, wall_height / 2.0, wall_thickness / 2.0),
             RigidBody::Fixed,
+            GameEntity,
         ));
 
         let road_mid_i = (left_points[i] + right_points[i]) / 2.0;
@@ -110,6 +114,7 @@ fn spawn_track(
             MeshMaterial3d(road_mat.clone()),
             Transform::from_xyz(road_center.x, 0.001, road_center.y)
                 .with_rotation(Quat::from_rotation_y(-road_angle)),
+            GameEntity,
         ));
 
         if i % 2 == 0 {
@@ -125,6 +130,7 @@ fn spawn_track(
                 MeshMaterial3d(dash_mat.clone()),
                 Transform::from_xyz(center.x, 0.002, center.y)
                     .with_rotation(Quat::from_rotation_y(-angle)),
+                GameEntity,
             ));
         }
     }

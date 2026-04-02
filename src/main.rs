@@ -14,6 +14,8 @@ use track::TrackPlugin;
 use ui::DebugUIPlugin;
 use vehicle::VehiclePlugin;
 
+use crate::physics::state::GameEntity;
+
 #[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum SimState {
     #[default]
@@ -31,6 +33,7 @@ fn main() {
         .add_plugins(DebugUIPlugin)
         .add_plugins(TrackPlugin)
         .init_state::<SimState>()
+        .add_systems(OnExit(SimState::Running), cleanup_sim)
         .add_systems(Startup, setup)
         .run();
 }
@@ -67,4 +70,10 @@ fn setup(
         },
         Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, -0.5, 1.5, 0.0)),
     ));
+}
+
+fn cleanup_sim(mut commands: Commands, query: Query<Entity, With<GameEntity>>) {
+    for entity in &query {
+        commands.entity(entity).despawn();
+    }
 }

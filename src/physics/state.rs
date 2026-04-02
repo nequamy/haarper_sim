@@ -53,3 +53,6 @@ impl Default for VehicleParams {
 
 #[derive(Component)]
 pub struct Robot;
+
+#[derive(Component)]
+pub struct GameEntity;
