@@ -2,9 +2,13 @@ use bevy::prelude::*;
 
 use crate::{
     SimState,
-    sensors::lidar::{LidarParams, LidarScan, draw_lidar_gizmos, simulate_scan},
+    sensors::{
+        imu::{ImuBias, ImuData, ImuParams, simulate_imu},
+        lidar::{LidarParams, LidarScan, draw_lidar_gizmos, simulate_scan},
+    },
 };
 
+mod imu;
 mod lidar;
 
 pub struct SensorPlugin;
@@ -17,6 +21,10 @@ impl Plugin for SensorPlugin {
             .add_systems(
                 Update,
                 draw_lidar_gizmos.run_if(in_state(SimState::Running)),
-            );
+            )
+            .insert_resource(ImuBias::default())
+            .insert_resource(ImuData::default())
+            .insert_resource(ImuParams::default())
+            .add_systems(Update, simulate_imu.run_if(in_state(SimState::Running)));
     }
 }

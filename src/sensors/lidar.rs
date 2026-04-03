@@ -75,7 +75,6 @@ pub fn simulate_scan(
 
     let origin = Vec3::new(state.x, 0.25, state.y) + forward * (-0.05);
 
-    let noise_dist = Normal::new(0.0, params.noise_std as f64).unwrap();
     let mut rng = rng();
 
     for i in 0..params.num_rays {
