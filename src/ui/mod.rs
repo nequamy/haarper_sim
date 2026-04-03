@@ -13,12 +13,11 @@ use crate::{
             record_trail, update_forces_gizmos, update_slip_angle, update_slip_ratio,
             update_trail_gizmos, update_velocity_gizmos,
         },
-        menu::{SelectedTrack, show_menu},
+        menu::{SelectedTrack, handle_file_drop, show_menu},
         panel::{debug_panel, update_process_diagnostic},
         resources::{DebugForces, DebugVisibility, ProcessDiagnostics, TrailHistory},
     },
 };
-
 
 pub struct DebugUIPlugin;
 
@@ -64,6 +63,7 @@ impl Plugin for DebugUIPlugin {
             .add_systems(
                 Update,
                 update_process_diagnostic.run_if(in_state(SimState::Running)),
-            );
+            )
+            .add_systems(Update, handle_file_drop.run_if(in_state(SimState::Menu)));
     }
 }

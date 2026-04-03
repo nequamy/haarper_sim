@@ -83,3 +83,24 @@ pub fn show_menu(
 
     Ok(())
 }
+
+pub fn handle_file_drop(
+    mut events: MessageReader<FileDragAndDrop>,
+    mut track: ResMut<SelectedTrack>,
+) {
+    for event in events.read() {
+        if let FileDragAndDrop::DroppedFile {
+            window: _,
+            path_buf,
+        } = event
+            && path_buf.extension().is_some_and(|ext| ext == "csv")
+        {
+            track.name = path_buf
+                .file_stem()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .into_owned();
+            track.path = path_buf.to_string_lossy().into_owned();
+        }
+    }
+}
