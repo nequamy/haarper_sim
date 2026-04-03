@@ -118,6 +118,7 @@ pub fn debug_panel(
             ui.checkbox(&mut vis.show_slip, "Slip angle");
             ui.checkbox(&mut vis.show_trail, "Trail");
             ui.checkbox(&mut vis.show_tire_forces, "Tire forces");
+            ui.checkbox(&mut vis.show_lidar_ray, "Lidar ray casting");
         });
 
     Ok(())

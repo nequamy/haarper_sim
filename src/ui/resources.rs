@@ -8,6 +8,7 @@ pub struct DebugVisibility {
     pub show_tire_forces: bool,
     pub show_trail: bool,
     pub show_slip: bool,
+    pub show_lidar_ray: bool,
 }
 
 #[derive(Resource, Default)]
