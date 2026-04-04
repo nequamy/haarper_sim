@@ -2,11 +2,12 @@ use bevy::{
     diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin},
     prelude::*,
 };
-use bevy_egui::{EguiContexts, egui};
+use bevy_egui::{EguiContexts, EguiTextureHandle, egui};
 use sysinfo::ProcessesToUpdate;
 
 use crate::{
     physics::{battery::BatteryState, motor::MotorState, state::VehicleState},
+    sensors::camera::RobotCameraImage,
     ui::resources::{DebugVisibility, ProcessDiagnostics},
     vehicle::input::VehicleInput,
 };
@@ -19,9 +20,11 @@ pub fn debug_panel(
     process: Res<ProcessDiagnostics>,
     diag_store: Res<DiagnosticsStore>,
     time: Res<Time>,
+    camera_image: Res<RobotCameraImage>,
     mut contexts: EguiContexts,
     mut vis: ResMut<DebugVisibility>,
 ) -> Result {
+    let camera_texture_id = contexts.add_image(EguiTextureHandle::Weak(camera_image.handle.id()));
     let ctx = contexts.ctx_mut()?;
 
     ctx.style_mut(|style| {
@@ -121,6 +124,15 @@ pub fn debug_panel(
             ui.checkbox(&mut vis.show_lidar_ray, "Lidar ray casting");
         });
 
+    egui::Window::new("Camera")
+        .anchor(egui::Align2::RIGHT_BOTTOM, [-5.0, -5.0])
+        .resizable(false)
+        .show(ctx, |ui| {
+            ui.image(egui::load::SizedTexture::new(
+                camera_texture_id,
+                [320.0, 240.0],
+            ));
+        });
     Ok(())
 }
 

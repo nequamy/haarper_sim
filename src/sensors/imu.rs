@@ -102,11 +102,4 @@ pub fn simulate_imu(
 
     let quat = Quat::from_rotation_y(-state.yaw);
     data.quaternion = [quat.x, quat.y, quat.z, quat.w];
-
-    dbg!(data.accel);
-    dbg!(data.gyro);
-    dbg!(data.quaternion);
-
-    dbg!(bias.accel_bias);
-    dbg!(bias.gyro_bias);
 }
