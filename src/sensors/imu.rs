@@ -6,11 +6,11 @@ use crate::physics::state::VehicleState;
 
 #[derive(Resource)]
 pub struct ImuParams {
-    accel_noise_std: f32,
-    gyro_noise_std: f32,
-    accel_bias_walk: f32,
-    gyro_bias_walk: f32,
-    timer: Timer,
+    pub accel_noise_std: f32,
+    pub gyro_noise_std: f32,
+    pub accel_bias_walk: f32,
+    pub gyro_bias_walk: f32,
+    pub timer: Timer,
 }
 
 impl Default for ImuParams {
@@ -27,10 +27,10 @@ impl Default for ImuParams {
 
 #[derive(Resource, Default)]
 pub struct ImuData {
-    accel: [f32; 3],
-    gyro: [f32; 3],
-    quaternion: [f32; 4],
-    timestamp: f64,
+    pub accel: [f32; 3],
+    pub gyro: [f32; 3],
+    pub quaternion: [f32; 4],
+    pub timestamp: f64,
 }
 
 #[derive(Resource, Default)]
@@ -51,7 +51,7 @@ pub fn simulate_imu(
         return;
     }
 
-    let dt = time.delta_secs();
+    let dt = params.timer.duration().as_secs_f32();
     let mut rng = rng();
 
     bias.accel_bias[0] +=
@@ -102,4 +102,5 @@ pub fn simulate_imu(
 
     let quat = Quat::from_rotation_y(-state.yaw);
     data.quaternion = [quat.x, quat.y, quat.z, quat.w];
+    data.timestamp = time.elapsed_secs_f64();
 }

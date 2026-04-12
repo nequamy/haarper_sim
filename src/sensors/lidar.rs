@@ -10,19 +10,19 @@ use crate::{
 
 #[derive(Resource)]
 pub struct LidarParams {
-    num_rays: usize,
-    max_range: f32,
-    scan_hz: f32,
-    noise_std: f32,
-    offset: Vec2,
-    timer: Timer,
+    pub num_rays: usize,
+    pub max_range: f32,
+    pub scan_hz: f32,
+    pub noise_std: f32,
+    pub offset: Vec2,
+    pub timer: Timer,
 }
 
 impl Default for LidarParams {
     fn default() -> Self {
         Self {
-            num_rays: 360,
-            max_range: 40.0,
+            num_rays: 3200,
+            max_range: 12.0,
             scan_hz: 10.0,
             noise_std: 0.005,
             offset: Vec2::new(-0.05, 0.0),
@@ -33,17 +33,17 @@ impl Default for LidarParams {
 
 #[derive(Resource)]
 pub struct LidarScan {
-    ranges: Vec<f32>,
-    angles: Vec<f32>,
-    timestamps: f64,
+    pub ranges: Vec<f32>,
+    pub angles: Vec<f32>,
+    pub timestamps: f64,
 }
 
 impl LidarScan {
     pub fn new() -> Self {
         Self {
-            ranges: vec![0.0; 360],
-            angles: (0..360)
-                .map(|i| (i as f32 / 360.0) * std::f32::consts::TAU)
+            ranges: vec![0.0; 3200],
+            angles: (0..3200)
+                .map(|i| (i as f32 / 3200.0) * std::f32::consts::TAU)
                 .collect(),
             timestamps: 0.0,
         }
@@ -97,6 +97,7 @@ pub fn simulate_scan(
                 .unwrap_or(Normal::new(0.0, 0.001).unwrap());
         scan.ranges[i] = (distance + noise_std_actual.sample(&mut rng) as f32).max(0.0);
     }
+    scan.timestamps = time.elapsed_secs_f64();
 }
 
 pub fn draw_lidar_gizmos(

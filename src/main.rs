@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+mod comms;
 mod physics;
 mod sensors;
 mod ui;
@@ -15,7 +16,7 @@ use track::TrackPlugin;
 use ui::DebugUIPlugin;
 use vehicle::VehiclePlugin;
 
-use crate::{physics::state::GameEntity, sensors::SensorPlugin};
+use crate::{comms::CommsPlugin, physics::state::GameEntity, sensors::SensorPlugin};
 
 #[derive(States, Default, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum SimState {
@@ -34,6 +35,7 @@ fn main() {
         .add_plugins(DebugUIPlugin)
         .add_plugins(TrackPlugin)
         .add_plugins(SensorPlugin)
+        .add_plugins(CommsPlugin)
         .init_state::<SimState>()
         .add_systems(OnExit(SimState::Running), cleanup_sim)
         .add_systems(Startup, setup)
