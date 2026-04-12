@@ -31,7 +31,10 @@ mod tests {
 
         assert_eq!(buf.len(), 26);
         assert_eq!(buf[0..2], [0x02, 0x00]);
-        assert_eq!(buf[2..10], 123.456_f64.to_bits().to_le_bytes());
+        assert_eq!(
+            buf[2..10],
+            ((123.456_f64 * 1_000_000.0) as u64).to_le_bytes()
+        );
         assert_eq!(buf[10..14], 0.0_f32.to_le_bytes());
         assert_eq!(buf[14..18], 1.5_f32.to_le_bytes());
         assert_eq!(buf[18..22], std::f32::consts::FRAC_PI_2.to_le_bytes());

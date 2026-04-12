@@ -54,10 +54,15 @@ pub fn sync_vehicle_after_collision(
         wx -= 1.15 * v_norm * nx;
         wy -= 1.15 * v_norm * nz;
 
+        let v_dot_n = wx * nx + wy * nz;
+
+        let tang_x = wx - v_dot_n * nx;
+        let tang_z = wy - v_dot_n * nz;
+
+        wx = v_dot_n * nx + tang_x * 0.7;
+        wy = v_dot_n * nz + tang_z * 0.7;
+
         state.vx = wx * state.yaw.cos() + wy * state.yaw.sin();
         state.vy = -wx * state.yaw.sin() + wy * state.yaw.cos();
-
-        wheel.kappa = [0.0; 4];
-        wheel.alpha = [0.0; 4];
     }
 }

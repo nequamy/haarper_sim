@@ -37,12 +37,12 @@ impl Default for TireParams {
             mu: 1.05,
 
             // Lateral
-            by: 5.0,
+            by: 8.0,
             cy: 1.5,
             ey: 0.0,
 
             // Longitudinal
-            bx: 5.0,
+            bx: 8.0,
             cx: 1.5,
             ex: 0.0,
 
@@ -52,8 +52,8 @@ impl Default for TireParams {
             cyk: 1.0,
             byk: 10.0,
 
-            sigma_kappa: 0.1,
-            sigma_alpha: 0.2,
+            sigma_kappa: 0.08,
+            sigma_alpha: 0.12,
         }
     }
 }

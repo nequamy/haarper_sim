@@ -38,13 +38,13 @@ impl Plugin for PhysicsPlugin {
             .insert_resource(Time::<Fixed>::from_hz(500.0))
             .add_systems(
                 FixedUpdate,
-                (update_physics, sync_vehicle_transform)
+                (
+                    update_physics,
+                    sync_vehicle_transform,
+                    sync_vehicle_after_collision,
+                )
                     .chain()
                     .run_if(in_state(SimState::Running)),
-            )
-            .add_systems(
-                PostUpdate,
-                sync_vehicle_after_collision.run_if(in_state(SimState::Running)),
             );
     }
 }
