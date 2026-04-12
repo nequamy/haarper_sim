@@ -41,7 +41,7 @@ impl Default for VehicleParams {
             wheelbase: 0.33,
             w: 0.25,
             r_wheel: 0.055,
-            h_cg: 0.04,
+            h_cg: 0.055,
             c_rolling: 0.03,
             cd_a: 0.02,
             c_omega_damp: 0.04,

@@ -14,7 +14,7 @@ impl Default for ServoParams {
             omega_n: 17.0,
             zeta: 1.2,
             omega_max: 10.5,
-            delta_max: 0.35,
+            delta_max: 0.436,
         }
     }
 }

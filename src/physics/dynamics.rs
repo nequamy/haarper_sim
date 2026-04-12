@@ -78,8 +78,9 @@ pub fn update_physics(
     debug_forces.wheel_vx = [vx_fl_w, vx_fr_w, vx_rl, vx_rr];
     debug_forces.wheel_vy = [vy_fl_w, vy_fr_w, vy_rl, vy_rr];
 
-    let delta_fz_long = params.m * state.ax * params.h_cg / params.wheelbase;
-    let delta_fz_lat = params.m * state.ay * params.h_cg / params.w;
+    let delta_fz_long =
+        params.m * (state.ax - state.vy * state.omega) * params.h_cg / params.wheelbase;
+    let delta_fz_lat = params.m * (state.ay + state.vx * state.omega) * params.h_cg / params.w;
 
     // Силы
     let fz_fl = ((params.m * 9.81 * params.lr / (params.wheelbase * 2.0))
@@ -218,6 +219,7 @@ pub fn update_physics(
     state.x += (state.vx * state.yaw.cos() - state.vy * state.yaw.sin()) * dt;
     state.y += (state.vx * state.yaw.sin() + state.vy * state.yaw.cos()) * dt;
     state.yaw += state.omega * dt;
+    state.yaw = state.yaw.rem_euclid(std::f32::consts::TAU);
 }
 
 pub fn sync_vehicle_transform(

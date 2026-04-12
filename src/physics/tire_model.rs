@@ -29,29 +29,31 @@ pub struct TireParams {
     /// Параметры релаксации
     pub sigma_kappa: f32,
     pub sigma_alpha: f32,
-    /// Параметры нормализации модели
-    dx_norm: f32,
-    dy_norm: f32,
 }
 
 impl Default for TireParams {
     fn default() -> Self {
         Self {
-            mu: 1.2,
-            ex: 0.0,
+            mu: 1.05,
+
+            // Lateral
+            by: 5.0,
+            cy: 1.5,
             ey: 0.0,
-            bx: 15.0,
-            cx: 1.65,
-            by: 15.0,
-            cy: 1.3,
+
+            // Longitudinal
+            bx: 5.0,
+            cx: 1.5,
+            ex: 0.0,
+
+            // Combined slip
             bxa: 12.0,
             cxa: 1.0,
             cyk: 1.0,
             byk: 10.0,
+
             sigma_kappa: 0.1,
             sigma_alpha: 0.2,
-            dx_norm: (1.65 * f32::consts::FRAC_PI_2).sin().abs(),
-            dy_norm: (1.3 * f32::consts::FRAC_PI_2).sin().abs(),
         }
     }
 }
@@ -70,13 +72,15 @@ impl Pacejka {
 
     /// Функция для просчета чистой боковой силы одного колеса
     fn lateral(&self, alpha: f32, fz: f32) -> f32 {
-        (self.params.mu * fz / self.params.dy_norm)
+        self.params.mu
+            * fz
             * (self.params.cy * pacejka_base(self.params.by, self.params.ey, alpha)).sin()
     }
 
     /// Функция для расчета чистой продольной силы одного колеса
     fn longitudinal(&self, kappa: f32, fz: f32) -> f32 {
-        (self.params.mu * fz / self.params.dx_norm)
+        self.params.mu
+            * fz
             * (self.params.cx * pacejka_base(self.params.bx, self.params.ex, kappa)).sin()
     }
 
